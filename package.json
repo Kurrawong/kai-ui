@@ -1,0 +1,68 @@
+{
+    "name": "kai-ui",
+    "private": true,
+    "version": "0.1.0",
+    "type": "module",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Kurrawong/kai-ui.git"
+    },
+    "bugs": {
+        "url": "https://github.com/Kurrawong/kai-ui/issues"
+    },
+    "homepage": "https://github.com/Kurrawong/kai-ui/tree/main/packages/prez-ui#readme",
+    "keywords": [
+        "vue3",
+        "vue",
+        "vuejs",
+        "rdf",
+        "linked data",
+        "semantic web"
+    ],
+    "files": [
+        "dist"
+    ],
+    "main": "./dist/kai-ui.umd.cjs",
+    "module": "./dist/kai-ui.js",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/kai-ui.js",
+            "require": "./dist/kai-ui.umd.cjs"
+        },
+        "./kai-ui.css": {
+            "import": "./dist/kai-ui.css",
+            "require": "./dist/kai-ui.css"
+        }
+    },
+    "types": "./dist/index.d.ts",
+    "scripts": {
+        "dev": "vite",
+        "build": "vue-tsc && vite build",
+        "preview": "vite preview",
+        "test:unit": "vitest",
+        "build-only": "vite build",
+        "type-check": "vue-tsc --build",
+        "preinstall": "npx only-allow pnpm"
+    },
+    "peerDependencies": {
+        "vue": "^3.0.0"
+    },
+    "devDependencies": {
+        "@types/jsdom": "^21.1.7",
+        "@types/node": "^22.10.2",
+        "@vitejs/plugin-vue": "^5.2.1",
+        "@vue/test-utils": "^2.4.6",
+        "jsdom": "^25.0.1",
+        "typescript": "~5.6.3",
+        "vite": "^6.0.3",
+        "vite-plugin-dts": "^4.3.0",
+        "vite-plugin-monaco-editor-esm": "^2.0.2",
+        "vite-plugin-vue-devtools": "^7.6.8",
+        "vitest": "^2.1.5",
+        "vue-tsc": "^2.1.10"
+    },
+    "dependencies": {
+        "monaco-editor": "^0.44.0"
+    }
+}
