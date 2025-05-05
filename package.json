@@ -63,6 +63,10 @@
         "vue-tsc": "^2.1.10"
     },
     "dependencies": {
-        "monaco-editor": "^0.44.0"
+        "monaco-editor": "^0.44.0",
+        "vue3-openlayers": "^11.5.0",
+        "ol": "9.2.4",
+        "ol-contextmenu": "5.4.0",
+        "ol-ext": "4.0.18"
     }
 }

@@ -24,6 +24,9 @@ A base Monaco code editor with support for multiple languages, including RDF lan
 
 ![CodeEditor component](/docs/CodeEditor.png)
 
+### OpenLayers Map
+An interactive OpenLayers Map that supports loading WKT & geoJSON features.
+
 #### Supported languages
 - SPARQL
 - JSON
