@@ -4,10 +4,17 @@ import { resolve } from "path";
 import vue from "@vitejs/plugin-vue";
 import vueDevTools from "vite-plugin-vue-devtools";
 import dts from "vite-plugin-dts";
-import monacoEditorPlugin from "vite-plugin-monaco-editor-esm";
+import tailwindcss from "@tailwindcss/vite";
+// import monacoEditorPlugin from "vite-plugin-monaco-editor-esm";
 
 export default defineConfig({
-    plugins: [vue(), vueDevTools(), dts(), monacoEditorPlugin()],
+    plugins: [
+        vue(),
+        vueDevTools(),
+        dts(),
+        tailwindcss(),
+        // monacoEditorPlugin(),
+    ],
     build: {
         lib: {
             entry: resolve(__dirname, "src/index.ts"),

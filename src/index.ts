@@ -1,9 +1,9 @@
-import "./assets/style.css";
+import "./assets/index.css";
 
-import CodeEditor from "./components/CodeEditor.vue";
+import { Editor } from "./components/editor";
 
 // export * from "./types";
 
 export {
-    CodeEditor,
+    Editor,
 };
