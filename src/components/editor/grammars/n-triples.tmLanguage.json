@@ -7,13 +7,7 @@
 			"include": "#blank-node-label"
 		},
 		{
-			"include": "source.turtle#iri"
-		},
-		{
-			"include": "source.turtle#literal"
-		},
-		{
-			"include": "source.turtle#comment"
+			"include": "source.turtle"
 		}
 	],
 	"repository": {

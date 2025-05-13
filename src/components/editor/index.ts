@@ -11,26 +11,88 @@ import tsGrammar from "./grammars/TypeScript.tmLanguage.json";
 import pythonGrammar from "./grammars/MagicPython.tmLanguage.json";
 import ntGrammar from "./grammars/n-triples.tmLanguage.json";
 import nqGrammar from "./grammars/n-quads.tmLanguage.json";
+import type { Language } from "@/types";
 
 export { default as Editor } from "./Editor.vue";
 
-export type Language = "css" | "html" | "javascript" | "json" | "n-quads" | "n-triples" | "python" | "shacl" | "sparql" | "trig" | "turtle" | "typescript";
-
-export const languageOptions: { label: string; value: Language; }[] = [
-    { label: "CSS", value: "css" },
-    { label: "HTML", value: "html" },
-    { label: "JavaScript", value: "javascript" },
-    { label: "JSON", value: "json" },
-    { label: "N-Quads", value: "n-quads" },
-    { label: "N-Triples", value: "n-triples" },
-    { label: "Python", value: "python" },
-    { label: "SHACL", value: "shacl" },
-    { label: "SPARQL", value: "sparql" },
-    { label: "TriG", value: "trig" },
-    { label: "Turtle", value: "turtle" },
-    { label: "TypeScript", value: "typescript" },
-    // { label: "XML", value: "xml" },
-    // { label: "YAML", value: "yaml" },
+export const languageOptions: {
+    label: string;
+    value: Language;
+    extension: string;
+    mimetype: string;
+}[] = [
+    {
+        label: "CSS",
+        value: "css",
+        extension: "css",
+        mimetype: "text/css",
+    },
+    {
+        label: "HTML",
+        value: "html",
+        extension: "html",
+        mimetype: "text/html",
+    },
+    {
+        label: "JavaScript",
+        value: "javascript",
+        extension: "js",
+        mimetype: "text/javascript",
+    },
+    {
+        label: "JSON",
+        value: "json",
+        extension: "json",
+        mimetype: "application/json",
+    },
+    {
+        label: "N-Quads",
+        value: "n-quads",
+        extension: "nq",
+        mimetype: "application/n-quads",
+    },
+    {
+        label: "N-Triples",
+        value: "n-triples",
+        extension: "nt",
+        mimetype: "application/n-triples",
+    },
+    {
+        label: "Python",
+        value: "python",
+        extension: "py",
+        mimetype: "application/python",
+    },
+    {
+        label: "SHACL",
+        value: "shacl",
+        extension: "shacl",
+        mimetype: "application/shacl",
+    },
+    {
+        label: "SPARQL",
+        value: "sparql",
+        extension: "rq",
+        mimetype: "application/sparql",
+    },
+    {
+        label: "TriG",
+        value: "trig",
+        extension: "trig",
+        mimetype: "application/trig",
+    },
+    {
+        label: "Turtle",
+        value: "turtle",
+        extension: "ttl",
+        mimetype: "text/turtle",
+    },
+    {
+        label: "TypeScript",
+        value: "typescript",
+        extension: "ts",
+        mimetype: "text/typescript",
+    },
 ];
 
 export const grammarDefs: {
@@ -124,10 +186,8 @@ export function setupGrammars(monacoInstance: Monaco): { registry: Registry, gra
         },
     });
 
-    const overrideLanguages = [
-        "sparql",
-    ];
-
+    // overrides default languages from monaco if they conflict with syntax highlighting
+    const overrideLanguages = ["sparql"];
     monacoInstance.languages.getLanguages().forEach(lang => {
         if (overrideLanguages.includes(lang.id)) {
             // @ts-ignore
@@ -141,7 +201,6 @@ export function setupGrammars(monacoInstance: Monaco): { registry: Registry, gra
         monacoInstance.languages.register({ id: g.id });
     });
 
-    
     const grammars = new Map<string, string>();
 
     grammarDefs.forEach(g => {

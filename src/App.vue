@@ -2,7 +2,8 @@
 import { ref } from "vue";
 import { Button } from "./components/ui/button";
 import SelectInput from "./components/SelectInput.vue";
-import { Editor, languageOptions, type Language } from "./components/editor";
+import { Editor, languageOptions } from "./components/editor";
+import type { Language } from "./types";
 
 const examples: Record<Language, string> = {
     json: `{
@@ -84,8 +85,8 @@ function clear() {
             <SelectInput @select="loadExample($event as Language)" :options="languageOptions" placeholder="Load example" />
             <Button variant="destructive" @click="clear">Clear</Button>
         </div>
-        <pre>{{ data }}</pre>
-        <textarea name="" id="" v-model="data" class="w-full border h-[100px] my-4"></textarea>
-        <Editor v-model="data" v-model:language="language" :languages="['sparql']" hideTheme />
+        <!-- <pre>{{ data }}</pre>
+        <textarea name="" id="" v-model="data" class="w-full border h-[100px] my-4"></textarea> -->
+        <Editor v-model="data" v-model:language="language" />
     </div>
 </template>
