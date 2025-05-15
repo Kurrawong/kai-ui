@@ -1,8 +1,8 @@
 {
-    "name": "TriG",
-    "scopeName": "source.trig",
+    "name": "N3",
+    "scopeName": "source.n3",
     "fileTypes": [
-        "trig"
+        "n3"
     ],
     "patterns": [
         {
