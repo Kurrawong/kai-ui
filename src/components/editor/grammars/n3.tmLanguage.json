@@ -1,0 +1,12 @@
+{
+    "name": "N3",
+    "scopeName": "source.n3",
+    "fileTypes": [
+        "n3"
+    ],
+    "patterns": [
+        {
+            "include": "source.turtle"
+        }
+    ]
+}

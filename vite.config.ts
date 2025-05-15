@@ -5,7 +5,6 @@ import vue from "@vitejs/plugin-vue";
 import vueDevTools from "vite-plugin-vue-devtools";
 import dts from "vite-plugin-dts";
 import tailwindcss from "@tailwindcss/vite";
-// import monacoEditorPlugin from "vite-plugin-monaco-editor-esm";
 
 export default defineConfig({
     plugins: [
@@ -13,7 +12,6 @@ export default defineConfig({
         vueDevTools(),
         dts(),
         tailwindcss(),
-        // monacoEditorPlugin(),
     ],
     build: {
         lib: {

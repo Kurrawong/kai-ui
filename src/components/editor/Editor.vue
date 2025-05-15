@@ -13,14 +13,15 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { languageOptions, setupGrammars } from ".";
-import type { Language } from "@/types";
 import darkModernTheme from "./themes/dark_modern.json";
 import lightModernTheme from "./themes/light_modern.json";
+import type { Language } from "@/types";
 
 const props = defineProps<{
     languages?: Language[];
     hideToolbar?: boolean;
     options?: Omit<monaco.editor.IStandaloneEditorConstructionOptions, "value" | "language" | "theme">;
+    hideLanguage?: boolean;
     hideTheme?: boolean;
     hideCopyButton?: boolean;
     hideClearButton?: boolean;
@@ -28,7 +29,7 @@ const props = defineProps<{
     hideDownloadButton?: boolean;
     disableDrag?: boolean;
     readonly?: boolean;
-    // TODO: downloadFilename?: string;
+    downloadFilename?: string;
     class?: HTMLAttributes["class"];
 }>();
 
@@ -43,16 +44,20 @@ const isDownloading = ref(false);
 const isDragging = ref(false);
 
 const model = defineModel<string>();
-const language = defineModel<Language>("language", { default: "sparql" });
+const language = defineModel<Language>("language", { default: "text" });
 const theme = defineModel<"light-tm" | "dark-tm" | "unknown">("theme", { default: "unknown" });
 
 const isEditorReady = computed(() => !!monacoRef.value && !!editor.value);
 
 const filteredLanguageOptions = computed(() => {
     if (props.languages) {
-        return languageOptions.filter(l => props.languages?.includes(l.value));
+        return languageOptions.filter(l => props.languages?.includes(l.id as Language));
     } else return languageOptions;
 });
+
+const filteredLanguageDropdown = computed(() => {
+    return filteredLanguageOptions.value.map(l => {return {value: l.id, label: l.label}}).sort((a, b) => a.label.localeCompare(b.label));
+})
 
 const defaultOptions: Omit<monaco.editor.IStandaloneEditorConstructionOptions, "value" | "language" | "theme"> = {
     readOnly: !!props.readonly,
@@ -109,10 +114,10 @@ async function handleFiles(files: FileList) {
     const file = files[0];
     const splitFilename = file.name.split(".")
     const fileExtension = splitFilename[splitFilename.length - 1];
-    if (filteredLanguageOptions.value.map(l => l.extension).includes(fileExtension)) {
-        model.value = await file.text();
-        language.value = filteredLanguageOptions.value.find(l => l.extension === fileExtension)?.value!;
-    }
+    const index = filteredLanguageOptions.value.findIndex(l => l.extensions.includes(fileExtension));
+    
+    model.value = await file.text();
+    language.value = index >= 0 ? filteredLanguageOptions.value[index].id as Language : "text";
 }
 
 async function uploadFile(e: InputEvent) {
@@ -126,12 +131,12 @@ async function drop(e: DragEvent) {
 
 function downloadFile() {
     isDownloading.value = true;
-    const currentLanguage = filteredLanguageOptions.value.find(l => l.value === language.value)!;
-    const blob = new Blob([model.value || ""], { type: currentLanguage.mimetype });
+    const currentLanguage = filteredLanguageOptions.value.find(l => l.id === language.value)!;
+    const blob = new Blob([model.value || ""], { type: currentLanguage.mimetypes[0] });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    const filename = "output";
-    const extension = currentLanguage.extension || "txt";
+    const filename = props.downloadFilename || "output";
+    const extension = currentLanguage.extensions[0] || "txt";
     link.download = `${filename}.${extension}`;
     link.click();
     URL.revokeObjectURL(link.href);
@@ -213,18 +218,18 @@ onUnmounted(() => {
         </div>
         <div v-if="isEditorReady && !props.hideToolbar" :class="`editor-toolbar flex flex-row items-center gap-1 text-foreground border-b p-1 ${theme === 'dark-tm' ? 'dark bg-[#181818]' : 'bg-[#f8f8f8]'}`">
             <SelectInput
-                v-if="!props.languages || props.languages.length > 1"
-                :options="filteredLanguageOptions"
+                v-if="!props.hideLanguage && filteredLanguageOptions.length > 1"
+                :options="filteredLanguageDropdown"
                 v-model="language"
                 placeholder="Language"
                 :dark="theme === 'dark-tm'"
             />
-            <span class="text-xs text-muted-foreground" v-else>{{ languageOptions.find(o => o.value === language)?.label }}</span>
+            <span class="text-xs text-muted-foreground" v-else>{{ languageOptions.find(o => o.id === language)?.label }}</span>
             <SelectInput v-if="!hideTheme" :options="themes" v-model="theme" placeholder="Theme" :dark="theme === 'dark-tm'" />
             <Button v-if="!props.hideUploadButton && !props.readonly" variant="outline" size="sm" as-child>
                 <Label for="upload" class="font-normal">Upload
                     <Upload class="size-4" />
-                    <Input id="upload" type="file" class="hidden" @change="uploadFile" :accept="filteredLanguageOptions.map(l => `.${l.extension}`).join(',')" />
+                    <Input id="upload" type="file" class="hidden" @change="uploadFile" :accept="filteredLanguageOptions.map(l => l.extensions).flat().map(ext => `.${ext}`).join(',')" />
                 </Label>
             </Button>
             <Button v-if="!props.hideCopyButton" variant="outline" size="sm" class="size-8" title="Copy to clipboard"

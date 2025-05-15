@@ -1,1 +1,3 @@
-export type Language = "css" | "html" | "javascript" | "json" | "n-quads" | "n-triples" | "python" | "shacl" | "sparql" | "trig" | "turtle" | "typescript";
+import { languageOptionsUntyped } from "@/components/editor";
+
+export type Language = (typeof languageOptionsUntyped)[number]["id"];
