@@ -11,11 +11,11 @@ A Vue.js component library for use in Kurrawong tools.
 To add `kai-ui` to your project, simply run (coming soon):
 
 ```bash
-npm install kai-ui
+npm install @kurrawongai/kai-ui
 ```
 or
 ```bash
-pnpm add kai-ui
+pnpm add @kurrawongai/kai-ui
 ```
 
 ## Components
