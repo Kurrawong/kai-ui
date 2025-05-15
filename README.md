@@ -62,7 +62,7 @@ class|Passthrough for applying CSS classes|`string`||
 model|description|type|required|default
 -|-|-|:-:|:-:
 -|The value or content of the editor|`string`||
-language|The current language of the editor|`string`, see above||`"sparql"`
+language|The current language of the editor|`string`, see above||`"text"`
 theme|The color theme of the editor|`"light-tm" \| "dark-tm"`||system preference
 
 ## Development
