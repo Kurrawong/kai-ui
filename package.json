@@ -1,6 +1,5 @@
 {
-    "name": "kai-ui",
-    "private": true,
+    "name": "@kurrawongai/kai-ui",
     "version": "0.1.0",
     "type": "module",
     "repository": {
@@ -10,14 +9,14 @@
     "bugs": {
         "url": "https://github.com/Kurrawong/kai-ui/issues"
     },
-    "homepage": "https://github.com/Kurrawong/kai-ui/tree/main/packages/prez-ui#readme",
+    "homepage": "https://github.com/Kurrawong/kai-ui/tree/main#readme",
     "keywords": [
-        "vue3",
-        "vue",
-        "vuejs",
-        "rdf",
         "linked data",
-        "semantic web"
+        "rdf",
+        "semantic web",
+        "vue",
+        "vue3",
+        "vuejs"
     ],
     "files": [
         "dist"
@@ -57,7 +56,6 @@
         "typescript": "~5.6.3",
         "vite": "^6.0.3",
         "vite-plugin-dts": "^4.3.0",
-        "vite-plugin-monaco-editor-esm": "^2.0.2",
         "vite-plugin-vue-devtools": "^7.6.8",
         "vitest": "^2.1.5",
         "vue-tsc": "^2.1.10"

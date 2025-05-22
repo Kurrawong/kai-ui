@@ -1,10 +1,12 @@
 {
-  "name": "SHACL",
-  "scopeName": "source.shacl",
-  "fileTypes": [
-    "shacl"
-  ],
-  "patterns": [
-    { "include": "source.turtle" }
-  ]
+    "name": "SHACL",
+    "scopeName": "source.shacl",
+    "fileTypes": [
+        "shacl"
+    ],
+    "patterns": [
+        {
+            "include": "source.turtle"
+        }
+    ]
 }
