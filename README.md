@@ -24,6 +24,9 @@ A base Monaco code editor with support for multiple languages, including RDF lan
 
 ![Editor component](/docs/Editor.png)
 
+### OpenLayers Map
+An interactive OpenLayers Map that supports loading WKT & geoJSON features.
+
 #### Supported Languages
 - CSS
 - HTML
@@ -64,6 +67,9 @@ model|description|type|required|default
 -|The value or content of the editor|`string`||
 language|The current language of the editor|`string`, see above||`"text"`
 theme|The color theme of the editor|`"light-tm" \| "dark-tm"`||system preference
+
+### OpenLayers Map
+An interactive OpenLayers Map that supports loading WKT & geoJSON features.
 
 ## Development
 To install:

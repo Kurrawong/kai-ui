@@ -4,7 +4,10 @@ import { Button } from "./components/ui/button";
 import SelectInput from "./components/SelectInput.vue";
 import { Editor, languageOptions } from "./components/editor";
 import type { Language } from "./types";
+import Map from "./components/map/Map.vue";
+import { featureCollection } from "./data/map-testdata.ts"
 
+// Code editor
 const examples: Record<Language, string> = {
     json: `{
     "key": "value"
@@ -83,6 +86,36 @@ function clear() {
     language.value = "sparql";
     data.value = "";
 }
+
+// OpenLayers Map
+
+const loading = ref(false);
+const drawEnabled = ref(false);
+const layers = ref<any[]>([]);
+
+async function loadMapData() {
+    loading.value = true;
+    await new Promise(r => setTimeout(r, 1000));
+
+    layers.value = [featureCollection];
+    loading.value = false;
+}
+
+async function clearMapData() {
+    layers.value = [];
+}
+
+function drawend (feature) {
+    console.log('The user drew a feature:');
+    console.log(feature);
+}
+
+function select (feature) {
+    if (feature) {
+        console.log('The user selected ' + feature.name);
+    }
+}
+
 </script>
 
 <template>
@@ -96,5 +129,37 @@ function clear() {
         <!-- <pre>{{ data }}</pre>
         <textarea name="" id="" v-model="data" class="w-full border h-[100px] my-4"></textarea> -->
         <Editor v-model="data" v-model:language="language" />
+
+        <hr />
+
+        <h2>OpenLayers Map</h2>
+        <div class="flex flex-row gap-2 items-center">
+          <Button variant="outline" @click="loadMapData">Load data</Button>
+          <Button variant="destructive" @click="clearMapData">Clear data</Button>
+        </div>
+        <div class="flex flex-row gap-2 items-center">
+            <label for="checkbox">Enable Draw Mode</label>
+            <input type="checkbox" id="checkbox" v-model="drawEnabled" />
+        </div>
+
+        <Map class="kai-demo-map"
+            :center="[133.7751, -25.2744]"
+            :zoom="4"
+            :rotation="0"
+            :projection="'EPSG:4326'"
+            :layers="layers"
+            :loading="loading"
+            :drawEnabled="drawEnabled"
+            @drawend="drawend"
+            @select="select"
+        />
+
     </div>
 </template>
+
+<style lang="css" scoped>
+    .kai-demo-map {
+        height: 500px;
+        width: 100%;
+    }
+</style>
