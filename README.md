@@ -71,6 +71,28 @@ theme|The color theme of the editor|`"light-tm" \| "dark-tm"`||system preference
 ### OpenLayers Map
 An interactive OpenLayers Map that supports loading WKT & geoJSON features.
 
+![Map component](/docs/Map.png)
+#### Props
+prop|description|type|required|default
+-|-|-|:-:|-
+center|Where to center the map|`number[]`, array of 2 coordinates||[133.7751, -25.2744] (Australia)
+zoom|Zoom level|`number`||4
+rotation|Map rotation|`number`||0
+projection|Projection to use, make sure this matches the data|`string`||'EPSG:4326'
+focusSourceRef|Passed through to vue3-openlayers|`Sources.OlSourceVector`||null
+layers|Layers of GeoJSON FeatureCollections to include in the map on load|`Object[]`, check out `src/data/map-testdata.ts` for an example||[]
+loading|Display a "Loading" modal on the map, useful when loading data|`boolean`||false
+drawEnabled|Enable "Draw mode", allowing the user to draw on the Map|`boolean`||false
+
+#### Events
+event|description|parameters
+-|-|-
+select|Fired when the user selects (clicks) a feature|feature
+hover|Fired when the user hovers over a feature|feature
+drawstart|Fired when the user starts drawing|feature
+drawend|Fired when a feature is fully drawn by the user|feature
+
+
 ## Development
 To install:
 
