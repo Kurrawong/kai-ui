@@ -95,7 +95,7 @@ importers:
         version: 4.5.3(@types/node@22.15.14)(rollup@4.40.2)(typescript@5.6.3)(vite@6.3.5(@types/node@22.15.14)(jiti@2.4.2)(lightningcss@1.29.2))
       vite-plugin-vue-devtools:
         specifier: ^7.6.8
-        version: 7.7.6(rollup@4.40.2)(vite@6.3.5(@types/node@22.15.14)(jiti@2.4.2)(lightningcss@1.29.2))(vue@3.5.13(typescript@5.6.3))
+        version: 7.7.2(rollup@4.40.2)(vite@6.3.5(@types/node@22.15.14)(jiti@2.4.2)(lightningcss@1.29.2))(vue@3.5.13(typescript@5.6.3))
       vitest:
         specifier: ^2.1.5
         version: 2.1.9(@types/node@22.15.14)(jsdom@25.0.1)(lightningcss@1.29.2)
@@ -2276,8 +2276,8 @@ packages:
       '@nuxt/kit':
         optional: true
 
-  vite-plugin-vue-devtools@7.7.6:
-    resolution: {integrity: sha512-L7nPVM5a7lgit/Z+36iwoqHOaP3wxqVi1UvaDJwGCfblS9Y6vNqf32ILlzJVH9c47aHu90BhDXeZc+rgzHRHcw==}
+  vite-plugin-vue-devtools@7.7.2:
+    resolution: {integrity: sha512-5V0UijQWiSBj32blkyPEqIbzc6HO9c1bwnBhx+ay2dzU0FakH+qMdNUT8nF9BvDE+i6I1U8CqCuJiO20vKEdQw==}
     engines: {node: '>=v14.21.3'}
     peerDependencies:
       vite: ^3.1.0 || ^4.0.0-0 || ^5.0.0-0 || ^6.0.0-0
@@ -4655,11 +4655,11 @@ snapshots:
       - rollup
       - supports-color
 
-  vite-plugin-vue-devtools@7.7.2(rollup@4.37.0)(vite@6.2.3(@types/node@22.13.13)(jiti@2.4.2)(lightningcss@1.29.2))(vue@3.5.13(typescript@5.6.3)):
+  vite-plugin-vue-devtools@7.7.2(rollup@4.40.2)(vite@6.3.5(@types/node@22.15.14)(jiti@2.4.2)(lightningcss@1.29.2))(vue@3.5.13(typescript@5.6.3)):
     dependencies:
-      '@vue/devtools-core': 7.7.2(vite@6.2.3(@types/node@22.13.13)(jiti@2.4.2)(lightningcss@1.29.2))(vue@3.5.13(typescript@5.6.3))
-      '@vue/devtools-kit': 7.7.2
-      '@vue/devtools-shared': 7.7.2
+      '@vue/devtools-core': 7.7.6(vite@6.3.5(@types/node@22.15.14)(jiti@2.4.2)(lightningcss@1.29.2))(vue@3.5.13(typescript@5.6.3))
+      '@vue/devtools-kit': 7.7.6
+      '@vue/devtools-shared': 7.7.6
       execa: 9.5.2
       sirv: 3.0.1
       vite: 6.3.5(@types/node@22.15.14)(jiti@2.4.2)(lightningcss@1.29.2)
