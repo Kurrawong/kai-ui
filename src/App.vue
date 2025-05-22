@@ -4,7 +4,7 @@ import { Button } from "./components/ui/button";
 import SelectInput from "./components/SelectInput.vue";
 import { Editor, languageOptions } from "./components/editor";
 import type { Language } from "./types";
-import Map from "./components/Map.vue";
+import Map from "./components/map/Map.vue";
 import { featureCollection } from "./data/map-testdata.ts"
 
 // Code editor
@@ -129,18 +129,20 @@ function select (feature) {
         <!-- <pre>{{ data }}</pre>
         <textarea name="" id="" v-model="data" class="w-full border h-[100px] my-4"></textarea> -->
         <Editor v-model="data" v-model:language="language" />
-  
+
         <hr />
 
         <h2>OpenLayers Map</h2>
-        <button @click="loadMapData">Load data</button>
-        <button @click="clearMapData">Clear data</button>
-        <div>
+        <div class="flex flex-row gap-2 items-center">
+          <Button variant="outline" @click="loadMapData">Load data</Button>
+          <Button variant="destructive" @click="clearMapData">Clear data</Button>
+        </div>
+        <div class="flex flex-row gap-2 items-center">
             <label for="checkbox">Enable Draw Mode</label>
             <input type="checkbox" id="checkbox" v-model="drawEnabled" />
         </div>
 
-        <Map class="kai-demo-map" 
+        <Map class="kai-demo-map"
             :center="[133.7751, -25.2744]"
             :zoom="4"
             :rotation="0"
@@ -151,7 +153,7 @@ function select (feature) {
             @drawend="drawend"
             @select="select"
         />
-        
+
     </div>
 </template>
 

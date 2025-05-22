@@ -9,6 +9,8 @@ import { getCenter, type Extent } from "ol/extent";
 import { SelectEvent } from "ol/interaction/Select";
 import { mapLayerStyles, drawStyle, hoverStyle } from "@/consts.ts";
 import 'vue3-openlayers/dist/vue3-openlayers.css';
+import SelectInput from "@/components/SelectInput.vue";
+import Button from "@/components/ui/button/Button.vue";
 
 const props = defineProps({
     center: {
@@ -56,7 +58,7 @@ const wktFormat = new WKT();
 const geoJSONFormat = new GeoJSON();
 
 watch(
-    () => props.layers, 
+    () => props.layers,
     (newVal) => {
         let newProcessedLayers = [];
         for (const layer of newVal) {
@@ -130,7 +132,12 @@ const drawend = (event) => {
 };
 
 const drawType = ref('Polygon');
-
+const drawOptions = [
+  { label: "Point", value: "Point" },
+  { label: "LineString", value: "LineString" },
+  { label: "Polygon", value: "Polygon" },
+  { label: "Circle", value: "Circle" }
+];
 const clearDrawings = () => {
     if (drawSourceRef.value) {
         let s = drawSourceRef.value.source;
@@ -143,19 +150,15 @@ const clearDrawings = () => {
 
 <template>
     <div class="kai-map" ref="mapRef">
-        <div class="draw-controls" v-if="drawEnabled">
+        <div class="draw-controls flex flex-row gap-2 items-center" v-if="drawEnabled">
             <label for="type">Geometry Type</label>
-            <select id="type" class="select-default" v-model="drawType">
-                <option value="Point">Point</option>
-                <option value="LineString">LineString</option>
-                <option value="Polygon">Polygon</option>
-                <option value="Circle">Circle</option>
-            </select>
-            <button @click="clearDrawings">Clear</button>
+            <SelectInput :options="drawOptions" v-model="drawType">
+            </SelectInput>
+            <Button variant="destructive" @click="clearDrawings">Clear</Button>
         </div>
-        <Map.OlMap 
-            :loadTilesWhileAnimating="true" 
-            :loadTilesWhileInteracting="true" 
+        <Map.OlMap
+            :loadTilesWhileAnimating="true"
+            :loadTilesWhileInteracting="true"
             style="height: 100%; width: 100%; min-height: 400px; min-width: 400px;">
             <Map.OlView ref="viewRef" :center="props.center" :rotation="props.rotation" :zoom="zoom" :projection="props.projection" />
 
