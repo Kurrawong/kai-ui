@@ -1,51 +1,45 @@
 <script lang="ts" setup>
-import { ref, provide, defineProps, watch } from "vue";
-import { Map, Layers, Sources, Geometries, Styles, MapControls, Interactions, type Vue3OpenlayersGlobalOptions } from "vue3-openlayers";
+import { ref, provide, watch, computed, useTemplateRef } from "vue";
+import { Map, Layers, Sources, MapControls, Interactions, type Vue3OpenlayersGlobalOptions } from "vue3-openlayers";
 import type Feature from "ol/Feature";
 import { GeoJSON, WKT } from "ol/format";
-import { bbox } from "ol/loadingstrategy";
 import { pointerMove, click } from "ol/events/condition";
-import { getCenter, type Extent } from "ol/extent";
-import { SelectEvent } from "ol/interaction/Select";
-import { mapLayerStyles, drawStyle, hoverStyle } from "@/consts.ts";
+import { getCenter } from "ol/extent";
+import type { SelectEvent } from "ol/interaction/Select";
+import type { DrawEvent } from "ol/interaction/Draw";
+import type { Type as GeometryType } from "ol/geom/Geometry"
+import { defaultDrawStyle, defaultMapStyle } from "@/consts";
 import 'vue3-openlayers/dist/vue3-openlayers.css';
 import SelectInput from "@/components/SelectInput.vue";
-import Button from "@/components/ui/button/Button.vue";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import type { MapLayer, MapStyle, MapStyleOptions, ProcessedFeature, ProcessedLayer } from "@/types";
+import LayerStyle from "./LayerStyle.vue";
 
-const props = defineProps({
-    center: {
-        type: Array as () => number[],
-        default: () => [133.7751, -25.2744]
-    },
-    zoom: {
-        type: Number,
-        default: 4
-    },
-    rotation: {
-        type: Number,
-        default: 0
-    },
-    projection: {
-        type: String,
-        default: 'EPSG:4326'
-    },
-    focusSourceRef: {
-        type: typeof Sources.OlSourceVector,
-        default: null
-    },
-    layers: {
-        type: Array,
-        default: () => []
-    },
-    loading: {
-        type: Boolean,
-        default: false
-    },
-    drawEnabled: {
-        type: Boolean,
-        default: false
-    }
+const props = withDefaults(defineProps<{
+    center?: number[];
+    zoom?: number;
+    rotation?: number;
+    projection?: string;
+    focusSourceRef?: InstanceType<typeof Sources.OlSourceVector> | null;
+    layers?: MapLayer[];
+    loading?: boolean;
+    drawEnabled?: boolean;
+    mapStyle?: MapStyle;
+    drawStyle?: MapStyleOptions;
+}>(), {
+    center: () => [133.7751, -25.2744], // Australia
+    zoom: 4,
+    rotation: 0,
+    projection: "EPSG:4326",
+    focusSourceRef: null,
+    layers: () => [],
+    loading: false,
+    drawEnabled: false,
+    mapStyle: () => defaultMapStyle,
+    drawStyle: () => defaultDrawStyle,
 });
+
 const emit = defineEmits(['drawstart', 'drawend', 'select', 'hover'])
 
 const loading = ref(props.loading);
@@ -53,37 +47,29 @@ watch(() => props.loading, (newVal) => { loading.value = newVal; }, { immediate:
 const drawEnabled = ref(props.drawEnabled);
 watch(() => props.drawEnabled, (newVal) => { drawEnabled.value = newVal; }, { immediate:true });
 
-let processedLayers = ref<any[]>([]);
 const wktFormat = new WKT();
 const geoJSONFormat = new GeoJSON();
 
-watch(
-    () => props.layers,
-    (newVal) => {
-        let newProcessedLayers = [];
-        for (const layer of newVal) {
-            // check all features for WKT geometry and translate it to GeoJSON
-            const features = layer.features;
-            const geoJSONFeatures = [];
-            for (const feature of features) {
-                let geoJSONFeature = {};
-                if (feature.geoJSON) {
-                    geoJSONFeature = geoJSONFormat.readFeature(feature.geoJSON, props.projection)
-                } else if (feature.wkt) {
-                    geoJSONFeature = wktFormat.readFeature(feature.wkt, props.projection)
-                }
-                geoJSONFeature.name = feature.name;
-                geoJSONFeatures.push(geoJSONFeature);
+const processedLayers = computed(() => {
+    let newProcessedLayers: ProcessedLayer[] = [];
+    for (const layer of props.layers) {
+        // check all features for WKT geometry and translate it to GeoJSON
+        const features = layer.features;
+        const geoJSONFeatures: ProcessedFeature[] = [];
+        for (const feature of features) {
+            let geoJSONFeature: ProcessedFeature = {} as ProcessedFeature;
+            if (feature.geoJSON) {
+                geoJSONFeature = geoJSONFormat.readFeature(feature.geoJSON, { dataProjection: props.projection })
+            } else if (feature.wkt) {
+                geoJSONFeature = wktFormat.readFeature(feature.wkt, { dataProjection: props.projection })
             }
-            layer.geoJSONFeatures = geoJSONFeatures;
-            newProcessedLayers.push(layer);
+            geoJSONFeature.name = feature.name;
+            geoJSONFeatures.push(geoJSONFeature);
         }
-        processedLayers.value = newProcessedLayers;
-    },
-    {
-        immediate: true
+        newProcessedLayers.push({...layer, geoJSONFeatures});
     }
-);
+    return newProcessedLayers;
+});
 
 const options: Vue3OpenlayersGlobalOptions = {
     debug: false,
@@ -95,10 +81,10 @@ const hoveredFeature = ref<Feature | null>(null);
 const selectedFeature = ref<Feature | null>(null);
 const selectedPosition = ref<number[]>([]);
 
-const mapRef = ref<InstanceType<typeof Map.OlMap> | null>(null);
-const viewRef = ref<InstanceType<typeof Map.OlView> | null>(null);
-const clickSelectRef = ref<InstanceType<typeof Interactions.OlInteractionSelect> | null>(null);
-const drawSourceRef = ref<InstanceType<typeof Sources.OlSourceVector> | null>(null);
+const mapRef = useTemplateRef<typeof Map.OlMap>("mapRef");
+const viewRef = useTemplateRef<typeof Map.OlView>("viewRef");
+const clickSelectRef = useTemplateRef<typeof Interactions.OlInteractionSelect>("clickSelectRef");
+const drawSourceRef = useTemplateRef<typeof Sources.OlSourceVector>("drawSourceRef");
 
 function featureHover(e: SelectEvent) {
     if (e.selected.length === 1) {
@@ -117,33 +103,34 @@ function featureClick(e: SelectEvent) {
         selectedFeature.value = null;
     }
     emit('select', selectedFeature.value);
-
 }
 
-const drawnFeatures : any[] = [];
+const drawnFeatures = ref<Feature[]>([]);
 
-const drawstart = (event) => {
-    emit('drawstart', geoJSONFormat.writeFeature(event.feature, props.projection));
+const drawstart = (event: DrawEvent) => {
+    emit('drawstart', geoJSONFormat.writeFeature(event.feature, { dataProjection: props.projection }));
 };
 
-const drawend = (event) => {
-    drawnFeatures.push(event.feature);
-    emit('drawend', geoJSONFormat.writeFeature(event.feature, props.projection));
+const drawend = (event: DrawEvent) => {
+    drawnFeatures.value.push(event.feature);
+    emit('drawend', geoJSONFormat.writeFeature(event.feature, { dataProjection: props.projection }));
 };
 
-const drawType = ref('Polygon');
-const drawOptions = [
-  { label: "Point", value: "Point" },
-  { label: "LineString", value: "LineString" },
-  { label: "Polygon", value: "Polygon" },
-  { label: "Circle", value: "Circle" }
+const drawOptions: { label: string; value: GeometryType; }[] = [
+    { label: "Point", value: "Point" },
+    { label: "LineString", value: "LineString" },
+    { label: "Polygon", value: "Polygon" },
+    { label: "Circle", value: "Circle" }
 ];
+const drawType = ref<GeometryType>('Polygon');
+
 const clearDrawings = () => {
     if (drawSourceRef.value) {
         let s = drawSourceRef.value.source;
-        for (const drawnFeature of drawnFeatures) {
+        for (const drawnFeature of drawnFeatures.value) {
             s.removeFeature(drawnFeature);
         }
+        drawnFeatures.value = [];
     }
 }
 </script>
@@ -151,9 +138,8 @@ const clearDrawings = () => {
 <template>
     <div class="kai-map" ref="mapRef">
         <div class="draw-controls flex flex-row gap-2 items-center" v-if="drawEnabled">
-            <label for="type">Geometry Type</label>
-            <SelectInput :options="drawOptions" v-model="drawType">
-            </SelectInput>
+            <Label for="type">Geometry Type</Label>
+            <SelectInput :options="drawOptions" v-model="drawType" id="type" />
             <Button variant="destructive" @click="clearDrawings">Clear</Button>
         </div>
         <Map.OlMap
@@ -170,15 +156,20 @@ const clearDrawings = () => {
             <!-- layers -->
             <Layers.OlVectorLayer v-for="layer in processedLayers" :title="layer.title" :visible="true">
                 <Sources.OlSourceVector
-                    :features="layer.geoJSONFeatures"
-                    format="geoJSON"
+                    :features="(layer.geoJSONFeatures as Feature[])"
+                    :format="geoJSONFormat"
                 >
                 </Sources.OlSourceVector>
-                <Styles.OlStyle>
-                    <Styles.OlStyleStroke :color="layer.strokeColor || drawStyle.strokeColor" :width="layer.strokeWidth || drawStyle.strokeWidth"></Styles.OlStyleStroke>
-                    <Styles.OlStyleFill :color="layer.fillColor || drawStyle.fillColor"></Styles.OlStyleFill>
-                </Styles.OlStyle>
+                <LayerStyle :mapStyle="layer.mapStyle?.style" :defaultStyle="props.mapStyle.style!" />
             </Layers.OlVectorLayer>
+
+            <Interactions.OlInteractionSelect :condition="pointerMove" @select="featureHover">
+                <LayerStyle :mapStyle="props.mapStyle?.hoverStyle" :defaultStyle="props.mapStyle.style!" />
+            </Interactions.OlInteractionSelect>
+
+            <Interactions.OlInteractionSelect :condition="click" @select="featureClick" ref="clickSelectRef">
+                <LayerStyle :mapStyle="props.mapStyle?.selectStyle" :defaultStyle="props.mapStyle.style!" />
+            </Interactions.OlInteractionSelect>
 
             <Layers.OlVectorLayer :displayInLayerSwitcher="false">
                 <Sources.OlSourceVector :projection="props.projection" ref="drawSourceRef">
@@ -188,45 +179,15 @@ const clearDrawings = () => {
                         @drawend="drawend"
                         @drawstart="drawstart"
                     >
-                        <Styles.OlStyle>
-                            <Styles.OlStyleStroke color="blue" :width="2"></Styles.OlStyleStroke>
-                            <Styles.OlStyleFill color="rgba(255, 255, 0, 0.4)"></Styles.OlStyleFill>
-                            <Styles.OlStyleCircle :radius="5">
-                                <Styles.OlStyleFill color="#00dd11" />
-                                <Styles.OlStyleStroke color="blue" :width="2" />
-                            </Styles.OlStyleCircle>
-                        </Styles.OlStyle>
+                        <LayerStyle :mapStyle="props.drawStyle" :defaultStyle="props.mapStyle.style!" />
                     </Interactions.OlInteractionDraw>
                 </Sources.OlSourceVector>
+                <LayerStyle :mapStyle="props.mapStyle?.style" :defaultStyle="props.mapStyle.style!" />
             </Layers.OlVectorLayer>
 
+            <LayerStyle :mapStyle="props.mapStyle?.style" :defaultStyle="props.mapStyle.style!" />
+
             <slot></slot>
-
-            <Interactions.OlInteractionSelect :condition="pointerMove" @select="featureHover">
-                <Styles.OlStyle>
-                    <Styles.OlStyleStroke v-if="hoveredFeature?.get('lga')" :color="mapLayerStyles.lga.hoverColor" :width="mapLayerStyles.lga.hoverStrokeWidth"></Styles.OlStyleStroke>
-                    <Styles.OlStyleStroke v-else-if="hoveredFeature?.get('locality')" :color="mapLayerStyles.locality.hoverColor" :width="mapLayerStyles.locality.hoverStrokeWidth"></Styles.OlStyleStroke>
-                    <Styles.OlStyleCircle v-else-if="hoveredFeature?.get('place_name')" :radius="mapLayerStyles.placename.hoverRadius!">
-                        <Styles.OlStyleFill :color="mapLayerStyles.placename.hoverColor"></Styles.OlStyleFill>
-                    </Styles.OlStyleCircle>
-                    <Styles.OlStyleStroke v-else-if="hoveredFeature?.get('segment_id')" :color="mapLayerStyles.road.hoverColor" :width="mapLayerStyles.road.hoverStrokeWidth"></Styles.OlStyleStroke>
-                    <Styles.OlStyleStroke v-else-if="hoveredFeature?.get('lot')" :color="mapLayerStyles.address.hoverColor" :width="mapLayerStyles.address.hoverStrokeWidth"></Styles.OlStyleStroke>
-                    <Styles.OlStyleCircle v-else-if="hoveredFeature?.get('address')" :radius="mapLayerStyles.address.hoverRadius!">
-                        <Styles.OlStyleFill :color="mapLayerStyles.address.hoverColor"></Styles.OlStyleFill>
-                    </Styles.OlStyleCircle>
-                    <template v-else>
-                        <Styles.OlStyleStroke :color="hoverStyle.strokeColor" :width="hoverStyle.strokeWidth"></Styles.OlStyleStroke>
-                        <Styles.OlStyleFill :color="hoverStyle.fillColor"></Styles.OlStyleFill>
-                        <Styles.OlStyleCircle :radius="hoverStyle.radius">
-                            <Styles.OlStyleFill :color="hoverStyle.circleColor"></Styles.OlStyleFill>
-                            <Styles.OlStyleStroke :color="hoverStyle.circleStrokeColor" :width="hoverStyle.circleStrokeWidth"></Styles.OlStyleStroke>
-                        </Styles.OlStyleCircle>
-                    </template>
-                </Styles.OlStyle>
-            </Interactions.OlInteractionSelect>
-
-            <Interactions.OlInteractionSelect :condition="click" @select="featureClick" ref="clickSelectRef">
-            </Interactions.OlInteractionSelect>
 
             <MapControls.OlLayerswitcherControl />
             <MapControls.OlFullscreenControl />

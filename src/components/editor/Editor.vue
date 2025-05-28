@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { shallowRef, useTemplateRef, onMounted, onUnmounted, watchEffect, nextTick, watch, computed, type HTMLAttributes, ref } from "vue";
-import { Copy, X, Upload, Download } from "lucide-vue-next";
+import { Copy, X, Upload, Download, Sun, Moon, SunMoon } from "lucide-vue-next";
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import { loadWASM } from "onigasm";
 import onigasmWasm from "onigasm/lib/onigasm.wasm?url";
@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { languageOptions, setupGrammars } from ".";
 import darkModernTheme from "./themes/dark_modern.json";
@@ -30,10 +31,11 @@ const props = defineProps<{
     disableDrag?: boolean;
     readonly?: boolean;
     downloadFilename?: string;
+    promptFilename?: boolean;
     class?: HTMLAttributes["class"];
 }>();
 
-const themes = [{ label: "Light", value: "light-tm" }, { label: "Dark", value: "dark-tm" }];
+const themeMap = { light: "light-tm", dark: "dark-tm", system: "system" };
 
 const { monacoRef, unload } = useMonaco();
 
@@ -45,7 +47,7 @@ const isDragging = ref(false);
 
 const model = defineModel<string>();
 const language = defineModel<Language>("language", { default: "text" });
-const theme = defineModel<"light-tm" | "dark-tm" | "unknown">("theme", { default: "unknown" });
+const theme = defineModel<"light" | "dark" | "system">("theme", { default: "system" });
 
 const isEditorReady = computed(() => !!monacoRef.value && !!editor.value);
 
@@ -57,7 +59,16 @@ const filteredLanguageOptions = computed(() => {
 
 const filteredLanguageDropdown = computed(() => {
     return filteredLanguageOptions.value.map(l => {return {value: l.id, label: l.label}}).sort((a, b) => a.label.localeCompare(b.label));
-})
+});
+
+const defaultFilename = computed(() => {
+    const currentLanguage = filteredLanguageOptions.value.find(l => l.id === language.value)!;
+    const filename = props.downloadFilename || "output";
+    const extension = currentLanguage.extensions[0] || "txt";
+    return `${filename}.${extension}`;
+});
+
+const filename = ref(defaultFilename.value);
 
 const defaultOptions: Omit<monaco.editor.IStandaloneEditorConstructionOptions, "value" | "language" | "theme"> = {
     readOnly: !!props.readonly,
@@ -89,7 +100,7 @@ async function createEditor() {
         ...props.options,
         value: model.value,
         language: language.value,
-        theme: theme.value,
+        theme: themeMap[theme.value],
     });
 
     editor.value.onDidChangeModelContent(() => {
@@ -135,9 +146,7 @@ function downloadFile() {
     const blob = new Blob([model.value || ""], { type: currentLanguage.mimetypes[0] });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    const filename = props.downloadFilename || "output";
-    const extension = currentLanguage.extensions[0] || "txt";
-    link.download = `${filename}.${extension}`;
+    link.download = filename.value;
     link.click();
     URL.revokeObjectURL(link.href);
 
@@ -159,14 +168,22 @@ watch(language, (newValue, oldValue) => {
 });
 
 watch(theme, (newValue) => {
-    monacoRef.value!.editor.setTheme(newValue as string);
+    if (newValue === "system") {
+        theme.value = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    } else {
+        monacoRef.value!.editor.setTheme(themeMap[newValue] as string);
+    }
+});
+
+watch(defaultFilename, (newValue) => {
+    filename.value = newValue;
 });
 
 onMounted(() => {
     const stop = watchEffect(() => {
         if (monacoRef.value && containerRef.value) {
-            if (theme.value === "unknown") {
-                theme.value = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark-tm" : "light-tm";
+            if (theme.value === "system") {
+                theme.value = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
             }
             nextTick(() => stop());
             createEditor();
@@ -216,16 +233,27 @@ onUnmounted(() => {
                 </div>
             </div>
         </div>
-        <div v-if="isEditorReady && !props.hideToolbar" :class="`editor-toolbar flex flex-row items-center gap-1 text-foreground border-b p-1 ${theme === 'dark-tm' ? 'dark bg-[#181818]' : 'bg-[#f8f8f8]'}`">
+        <div v-if="isEditorReady && !props.hideToolbar" :class="`editor-toolbar flex flex-row items-center gap-1 text-foreground border-b p-1 ${theme === 'dark' ? 'dark bg-[#181818]' : 'bg-[#f8f8f8]'}`">
             <SelectInput
                 v-if="!props.hideLanguage && filteredLanguageOptions.length > 1"
                 :options="filteredLanguageDropdown"
                 v-model="language"
                 placeholder="Language"
-                :dark="theme === 'dark-tm'"
+                :dark="theme === 'dark'"
             />
             <span class="text-xs text-muted-foreground" v-else>{{ languageOptions.find(o => o.id === language)?.label }}</span>
-            <SelectInput v-if="!hideTheme" :options="themes" v-model="theme" placeholder="Theme" :dark="theme === 'dark-tm'" />
+            <Button
+                v-if="!props.hideTheme"
+                variant="outline"
+                size="sm"
+                class="size-8"
+                :title="theme !== 'system' ? theme === 'dark' ? 'Set to light theme' : 'Set to dark theme' : undefined"
+                @click="theme !== 'system' ? theme === 'dark' ? theme = 'light' : theme = 'dark' : undefined"
+            >
+                <SunMoon v-if="theme === 'system'" class="size-4" />
+                <Sun v-else-if="theme === 'light'" class="size-4" />
+                <Moon v-else="theme === 'dark'" class="size-4" />
+            </Button>
             <Button v-if="!props.hideUploadButton && !props.readonly" variant="outline" size="sm" as-child>
                 <Label for="upload" class="font-normal">Upload
                     <Upload class="size-4" />
@@ -236,9 +264,27 @@ onUnmounted(() => {
                 @click="copyText">
                 <Copy class="size-4" />
             </Button>
-            <Button v-if="!props.hideDownloadButton" variant="outline" size="sm" class="size-8" title="Download file" @click="downloadFile" :disabled="isDownloading">
-                <Download class="size-4" />
-            </Button>
+            <template v-if="!props.hideDownloadButton">
+                <Popover v-if="props.promptFilename" class="sm:max-w-[600px]">
+                    <PopoverTrigger>
+                        <Button variant="outline" size="sm" class="size-8" title="Download file" :disabled="isDownloading">
+                            <Download class="size-4" />
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent class="flex flex-col gap-2">
+                        <Label>Filename</Label>
+                        <Input v-model="filename" placeholder="Download filename" />
+                        <div class="flex flex-row gap-2 items-center justify-end">
+                            <Button variant="default" @click="downloadFile" :disabled="isDownloading">
+                                Download <Download class="size-4" />
+                            </Button>
+                        </div>
+                    </PopoverContent>
+                </Popover>
+                <Button v-else variant="outline" size="sm" class="size-8" title="Download file" @click="downloadFile" :disabled="isDownloading">
+                    <Download class="size-4" />
+                </Button>
+            </template>
             <Button
                 v-if="!props.hideClearButton && !props.readonly"
                 variant="outline"
