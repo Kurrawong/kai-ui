@@ -174,7 +174,6 @@ function select (feature) {
             v-model="data"
             v-model:language="language"
             downloadFilename="test"
-            promptFilename
         />
 
         <hr />

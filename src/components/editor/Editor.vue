@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { shallowRef, useTemplateRef, onMounted, onUnmounted, watchEffect, nextTick, watch, computed, type HTMLAttributes, ref } from "vue";
-import { Copy, X, Upload, Download, Sun, Moon, SunMoon } from "lucide-vue-next";
+import { Copy, X, Upload, Download, Sun, Moon, SunMoon, Menu } from "lucide-vue-next";
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import { loadWASM } from "onigasm";
 import onigasmWasm from "onigasm/lib/onigasm.wasm?url";
@@ -11,7 +11,16 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger, PopoverAnchor } from "@/components/ui/popover";
+import { PopoverClose } from "reka-ui";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { languageOptions, setupGrammars } from ".";
 import darkModernTheme from "./themes/dark_modern.json";
@@ -31,7 +40,7 @@ const props = defineProps<{
     disableDrag?: boolean;
     readonly?: boolean;
     downloadFilename?: string;
-    promptFilename?: boolean;
+    directDownload?: boolean;
     class?: HTMLAttributes["class"];
 }>();
 
@@ -44,6 +53,9 @@ const containerRef = useTemplateRef("editorContainer");
 const cursorPosition = shallowRef({ lineNumber: 1, column: 1 });
 const isDownloading = ref(false);
 const isDragging = ref(false);
+const downloadPopoverOpen = ref(false);
+const downloadPopoverRef = useTemplateRef<typeof DropdownMenuItem>("downloadPopoverRef");
+const dropdownOpen = ref(false);
 
 const model = defineModel<string>();
 const language = defineModel<Language>("language", { default: "text" });
@@ -100,7 +112,7 @@ async function createEditor() {
         ...props.options,
         value: model.value,
         language: language.value,
-        theme: themeMap[theme.value],
+        theme: themeMap[theme.value || "system"],
     });
 
     editor.value.onDidChangeModelContent(() => {
@@ -171,7 +183,7 @@ watch(theme, (newValue) => {
     if (newValue === "system") {
         theme.value = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
     } else {
-        monacoRef.value!.editor.setTheme(themeMap[newValue] as string);
+        monacoRef.value!.editor.setTheme((themeMap[newValue || "system"]) as string);
     }
 });
 
@@ -233,76 +245,142 @@ onUnmounted(() => {
                 </div>
             </div>
         </div>
-        <div v-if="isEditorReady && !props.hideToolbar" :class="`editor-toolbar flex flex-row items-center gap-1 text-foreground border-b p-1 ${theme === 'dark' ? 'dark bg-[#181818]' : 'bg-[#f8f8f8]'}`">
-            <SelectInput
-                v-if="!props.hideLanguage && filteredLanguageOptions.length > 1"
-                :options="filteredLanguageDropdown"
-                v-model="language"
-                placeholder="Language"
-                :dark="theme === 'dark'"
-            />
-            <span class="text-xs text-muted-foreground" v-else>{{ languageOptions.find(o => o.id === language)?.label }}</span>
-            <Button
-                v-if="!props.hideTheme"
-                variant="outline"
-                size="sm"
-                class="size-8"
-                :title="theme !== 'system' ? theme === 'dark' ? 'Set to light theme' : 'Set to dark theme' : undefined"
-                @click="theme !== 'system' ? theme === 'dark' ? theme = 'light' : theme = 'dark' : undefined"
-            >
-                <SunMoon v-if="theme === 'system'" class="size-4" />
-                <Sun v-else-if="theme === 'light'" class="size-4" />
-                <Moon v-else="theme === 'dark'" class="size-4" />
-            </Button>
-            <Button v-if="!props.hideUploadButton && !props.readonly" variant="outline" size="sm" as-child>
-                <Label for="upload" class="font-normal">Upload
-                    <Upload class="size-4" />
-                    <Input id="upload" type="file" class="hidden" @change="uploadFile" :accept="filteredLanguageOptions.map(l => l.extensions).flat().map(ext => `.${ext}`).join(',')" />
-                </Label>
-            </Button>
-            <Button v-if="!props.hideCopyButton" variant="outline" size="sm" class="size-8" title="Copy to clipboard"
-                @click="copyText">
-                <Copy class="size-4" />
-            </Button>
-            <template v-if="!props.hideDownloadButton">
-                <Popover v-if="props.promptFilename" class="sm:max-w-[600px]">
-                    <PopoverTrigger>
-                        <Button variant="outline" size="sm" class="size-8" title="Download file" :disabled="isDownloading">
-                            <Download class="size-4" />
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent class="flex flex-col gap-2">
+        <div v-if="isEditorReady && !props.hideToolbar" :class="`editor-top-toolbar @container flex flex-row items-center justify-between gap-1 text-foreground border-b p-1 ${theme === 'dark' ? 'dark bg-[#181818]' : 'bg-[#f8f8f8]'}`">
+            <div class="editor-toolbar-top-left flex flex-row gap-1 items-center">
+                <SelectInput
+                    v-if="!props.hideLanguage && filteredLanguageOptions.length > 1"
+                    :options="filteredLanguageDropdown"
+                    v-model="language"
+                    placeholder="Language"
+                    :dark="theme === 'dark'"
+                />
+                <span class="text-xs text-muted-foreground" v-else>{{ languageOptions.find(o => o.id === language)?.label }}</span>
+                <Button v-if="!props.hideUploadButton && !props.readonly" variant="outline" size="sm" class="hidden @md:flex" as-child>
+                    <Label for="upload" class="font-normal">Upload
+                        <Upload class="size-4" />
+                        <Input id="upload" type="file" class="hidden" @change="uploadFile" :accept="filteredLanguageOptions.map(l => l.extensions).flat().map(ext => `.${ext}`).join(',')" />
+                    </Label>
+                </Button>
+                <Button v-if="!props.hideCopyButton" variant="outline" size="sm" class="size-8 hidden @md:flex" title="Copy to clipboard"
+                    @click="copyText">
+                    <Copy class="size-4" />
+                </Button>
+                <template v-if="!props.hideDownloadButton">
+                    <Popover v-if="!props.directDownload" class="@md:max-w-[600px]">
+                        <PopoverTrigger>
+                            <Button variant="outline" size="sm" class="size-8 hidden @md:flex" title="Download file" :disabled="isDownloading">
+                                <Download class="size-4" />
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent :class="`flex flex-col gap-2 ${theme === 'dark' ? 'dark' : ''}`">
+                            <Label>Filename</Label>
+                            <Input v-model="filename" placeholder="Download filename" />
+                            <div class="flex flex-row gap-2 items-center justify-end">
+                                <PopoverClose>
+                                    <Button variant="default" @click="downloadFile" :disabled="isDownloading">
+                                        Download <Download class="size-4" />
+                                    </Button>
+                                </PopoverClose>
+                            </div>
+                        </PopoverContent>
+                    </Popover>
+                    <Button v-else variant="outline" size="sm" class="size-8 hidden @md:flex" title="Download file" @click="downloadFile" :disabled="isDownloading">
+                        <Download class="size-4" />
+                    </Button>
+                </template>
+                <Button
+                    v-if="!props.hideClearButton && !props.readonly"
+                    variant="outline"
+                    size="sm"
+                    class="hidden @md:flex size-8 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground dark:border-destructive dark:text-destructive dark:hover:bg-destructive dark:hover:text-destructive-foreground"
+                    title="Clear content"
+                    @click="model = ''"
+                >
+                    <X class="size-4" />
+                </Button>
+                <slot name="toolbar-top-left" />
+            </div>
+            <div class="editor-toolbar-top-right flex flex-row gap-1 items-center">
+                <Popover v-if="!props.directDownload" class="@md:max-w-[600px]" v-model:open="downloadPopoverOpen" @update:open="$event ? '' : dropdownOpen = false">
+                    <!-- @vue-ignore -->
+                    <PopoverAnchor :reference="downloadPopoverRef" />
+                    <PopoverContent :class="`flex flex-col gap-2 z-60 ${theme === 'dark' ? 'dark' : ''}`">
                         <Label>Filename</Label>
                         <Input v-model="filename" placeholder="Download filename" />
                         <div class="flex flex-row gap-2 items-center justify-end">
-                            <Button variant="default" @click="downloadFile" :disabled="isDownloading">
-                                Download <Download class="size-4" />
-                            </Button>
+                            <PopoverClose>
+                                <Button variant="default" @click="downloadFile" :disabled="isDownloading">
+                                    Download <Download class="size-4" />
+                                </Button>
+                            </PopoverClose>
                         </div>
                     </PopoverContent>
                 </Popover>
-                <Button v-else variant="outline" size="sm" class="size-8" title="Download file" @click="downloadFile" :disabled="isDownloading">
-                    <Download class="size-4" />
+                <DropdownMenu v-model:open="dropdownOpen">
+                    <DropdownMenuTrigger as-child>
+                        <Button variant="outline" size="sm" class="size-8 flex @md:hidden"><Menu class="size-4" /></Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent :class="`mr-1 ${theme === 'dark' ? 'dark' : ''}`" @interact-outside="downloadPopoverOpen ? $event.preventDefault() : undefined">
+                        <DropdownMenuGroup>
+                            <DropdownMenuItem v-if="!props.hideUploadButton && !props.readonly" as-child>
+                                <Label for="upload" class="font-normal">Upload
+                                    <Upload class="size-4" />
+                                    <Input id="upload" type="file" class="hidden" @change="uploadFile" :accept="filteredLanguageOptions.map(l => l.extensions).flat().map(ext => `.${ext}`).join(',')" />
+                                </Label>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem v-if="!props.hideCopyButton" @click="copyText">
+                                <span class="flex flex-row items-center gap-2">Copy <Copy class="size-4" /></span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem v-if="!props.hideDownloadButton" @select.prevent="props.directDownload ? downloadFile() : downloadPopoverOpen = true" :disabled="isDownloading" ref="downloadPopoverRef">
+                                <span class="flex flex-row items-center gap-2">Download <Download class="size-4" /></span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem v-if="!props.hideClearButton && !props.readonly" @click="model = ''">
+                                <span class="flex flex-row items-center gap-2">Clear <X class="size-4" /></span>
+                            </DropdownMenuItem>
+                        </DropdownMenuGroup>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuGroup>
+                            <DropdownMenuItem v-if="!props.hideTheme" @click="theme !== 'system' ? theme === 'dark' ? theme = 'light' : theme = 'dark' : undefined">
+                                <span class="flex flex-row items-center gap-2">
+                                    <template v-if="theme === 'system'">
+                                        System <SunMoon class="size-4" />
+                                    </template>
+                                    <template v-else-if="theme === 'dark'">
+                                        Light Mode <Sun class="size-4" />
+                                    </template>
+                                    <template v-else="theme === 'light'">
+                                        Dark Theme <Moon class="size-4" />
+                                    </template>
+                                </span>
+                            </DropdownMenuItem>
+                        </DropdownMenuGroup>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+                <slot name="toolbar-top-right" />
+                <Button
+                    v-if="!props.hideTheme"
+                    variant="outline"
+                    size="sm"
+                    class="size-8 hidden @md:flex"
+                    :title="theme !== 'system' ? theme === 'dark' ? 'Set to light theme' : 'Set to dark theme' : undefined"
+                    @click="theme !== 'system' ? theme === 'dark' ? theme = 'light' : theme = 'dark' : undefined"
+                >
+                    <SunMoon v-if="theme === 'system'" class="size-4" />
+                    <Sun v-else-if="theme === 'dark'" class="size-4" />
+                    <Moon v-else="theme === 'light'" class="size-4" />
                 </Button>
-            </template>
-            <Button
-                v-if="!props.hideClearButton && !props.readonly"
-                variant="outline"
-                size="sm"
-                class="size-8 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground dark:border-destructive dark:text-destructive dark:hover:bg-destructive dark:hover:text-destructive-foreground"
-                title="Clear content"
-                @click="model = ''"
-            >
-                <X class="size-4" />
-            </Button>
-            <slot name="toolbar-left" />
-
-            <span v-if="!disableDrag && !props.hideUploadButton && !props.readonly" class="text-xs text-muted-foreground">Drag and drop</span>
-
-            <span class="text-xs text-muted-foreground ml-auto mr-2">Ln {{ cursorPosition.lineNumber }}, Col {{ cursorPosition.column }}</span>
-            <span class="text-xs text-muted-foreground">F1 for Command Palette</span>
-            <slot name="toolbar-right" />
+            </div>
         </div>
         <div class="editor grow" ref="editorContainer"></div>
+        <div v-if="isEditorReady && !props.hideToolbar" :class="`editor-bottom-toolbar flex flex-row items-center justify-between gap-1 text-foreground border-t p-1 ${theme === 'dark' ? 'dark bg-[#181818]' : 'bg-[#f8f8f8]'}`">
+            <div class="editor-toolbar-bottom-left flex flex-row gap-1 items-center">
+                <span class="text-xs text-muted-foreground">F1 for Command Palette</span>
+                <slot name="toolbar-bottom-left" />
+            </div>
+            <div class="editor-toolbar-bottom-right flex flex-row gap-1 items-center">
+                <slot name="toolbar-bottom-right" />
+                <span class="text-xs text-muted-foreground">Ln {{ cursorPosition.lineNumber }}, Col {{ cursorPosition.column }}</span>
+            </div>
+        </div>
     </div>
 </template>
