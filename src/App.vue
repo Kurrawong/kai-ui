@@ -3,7 +3,7 @@ import { ref } from "vue";
 import { Button } from "./components/ui/button";
 import SelectInput from "./components/SelectInput.vue";
 import { Editor, languageOptions } from "./components/editor";
-import type { Language } from "./types";
+import type { Language, MapStyle, MapStyleOptions } from "./types";
 import Map from "./components/map/Map.vue";
 import { featureCollection } from "./data/map-testdata.ts"
 
@@ -62,9 +62,11 @@ WHERE {
 <https://en.wikipedia.org/wiki/Tony_Benn>
   dc:title "Tony Benn";
   dc:publisher "Wikipedia".`,
-//     yaml: `prop:
-//   prop2:
-//     - array item`,
+  markdown: `# Title
+[link](https://example.com)`,
+    yaml: `prop:
+  prop2:
+    - array item`,
 };
 
 const options = languageOptions.map(l => {return {value: l.id, label: l.label}}).sort((a, b) => a.label.localeCompare(b.label));
@@ -88,6 +90,46 @@ function clear() {
 }
 
 // OpenLayers Map
+
+const mapStyle: MapStyle = {
+    style: {
+        strokeWidth: 2,
+        strokeColor: "blue",
+        fillColor: "rgba(125, 125, 255, 0.4)",
+        pointRadius: 6,
+        pointFillColor: "rgba(125, 125, 255, 0.4)",
+        pointStrokeWidth: 1,
+        pointStrokeColor: "black",
+    },
+    hoverStyle: {
+        strokeWidth: 2,
+        strokeColor: "blue",
+        fillColor: "rgba(125, 125, 255, 0.4)",
+        pointRadius: 6,
+        pointFillColor: "rgba(125, 125, 255, 0.4)",
+        pointStrokeWidth: 1,
+        pointStrokeColor: "black",
+    },
+    selectStyle: {
+        strokeWidth: 2,
+        strokeColor: "blue",
+        fillColor: "rgba(125, 125, 255, 0.4)",
+        pointRadius: 6,
+        pointFillColor: "rgba(125, 125, 255, 0.4)",
+        pointStrokeWidth: 1,
+        pointStrokeColor: "black",
+    },
+};
+
+const drawStyle: MapStyleOptions = {
+    strokeWidth: 2,
+    strokeColor: "blue",
+    fillColor: "rgba(125, 125, 255, 0.4)",
+    pointRadius: 6,
+    pointFillColor: "rgba(125, 125, 255, 0.4)",
+    pointStrokeWidth: 1,
+    pointStrokeColor: "black",
+};
 
 const loading = ref(false);
 const drawEnabled = ref(false);
@@ -128,7 +170,11 @@ function select (feature) {
         </div>
         <!-- <pre>{{ data }}</pre>
         <textarea name="" id="" v-model="data" class="w-full border h-[100px] my-4"></textarea> -->
-        <Editor v-model="data" v-model:language="language" />
+        <Editor
+            v-model="data"
+            v-model:language="language"
+            downloadFilename="test"
+        />
 
         <hr />
 
@@ -150,6 +196,8 @@ function select (feature) {
             :layers="layers"
             :loading="loading"
             :drawEnabled="drawEnabled"
+            :mapStyle="mapStyle"
+            :drawStyle="drawStyle"
             @drawend="drawend"
             @select="select"
         />

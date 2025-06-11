@@ -8,7 +8,7 @@ A Vue.js component library for use in Kurrawong tools.
 - [License](#license)
 
 ## Install
-To add `kai-ui` to your project, simply run (coming soon):
+To add `kai-ui` to your project, simply run:
 
 ```bash
 npm install @kurrawongai/kai-ui
@@ -17,6 +17,8 @@ or
 ```bash
 pnpm add @kurrawongai/kai-ui
 ```
+
+You may also need to import KAI-UI's stylesheet (`"kai-ui/kai-ui.css"`).
 
 ## Components
 ### Editor
@@ -33,6 +35,7 @@ An interactive OpenLayers Map that supports loading WKT & geoJSON features.
 - Java
 - JavaScript
 - JSON
+- Markdown
 - N3
 - N-Quads
 - N-Triples
@@ -43,6 +46,7 @@ An interactive OpenLayers Map that supports loading WKT & geoJSON features.
 - Turtle
 - TypeScript
 - XML
+- YAML
 
 #### Props
 prop|description|type|required|default
@@ -59,6 +63,7 @@ hideDownloadButton|Hides the download selector|`boolean`||`false`
 disableDrag|Disabled drag and drop|`boolean`||`false`
 readonly|Sets the editor to read only. Also hides the upload & clear buttons|`boolean`||`false`
 downloadFilename|Sets the name of the file for download|`string`||`"output"`
+directDownload|Downloads the file directly instead of a popup for renaming the downloaded file name|`boolean`||`false`
 class|Passthrough for applying CSS classes|`string`||
 
 #### Models
@@ -66,7 +71,7 @@ model|description|type|required|default
 -|-|-|:-:|:-:
 -|The value or content of the editor|`string`||
 language|The current language of the editor|`string`, see above||`"text"`
-theme|The color theme of the editor|`"light-tm" \| "dark-tm"`||system preference
+theme|The color theme of the editor|`"light" \| "dark" \| "system"`||`"system"`
 
 ### OpenLayers Map
 An interactive OpenLayers Map that supports loading WKT & geoJSON features.
@@ -80,9 +85,11 @@ zoom|Zoom level|`number`||4
 rotation|Map rotation|`number`||0
 projection|Projection to use, make sure this matches the data|`string`||'EPSG:4326'
 focusSourceRef|Passed through to vue3-openlayers|`Sources.OlSourceVector`||null
-layers|Layers of GeoJSON FeatureCollections to include in the map on load|`Object[]`, check out `src/data/map-testdata.ts` for an example||[]
+layers|Layers of GeoJSON FeatureCollections to include in the map on load|<pre lang="typescript">{&#13;  type: "FeatureCollection";&#13;  title: string;&#13;  features: {&#13;    type: "Feature";&#13;    name: string;&#13;    wkt?: string;&#13;    geoJSON?: any;&#13;  }[];&#13;  mapStyle?: MapStyle;&#13;}[]<pre> see drawStyle type for `MapStyleOptions`||[]
 loading|Display a "Loading" modal on the map, useful when loading data|`boolean`||false
 drawEnabled|Enable "Draw mode", allowing the user to draw on the Map|`boolean`||false
+mapStyle|Sets the default layer styles for view, hover & select states|<pre lang="typescript">{&#13;  style?: MapStyleOptions;&#13;  hoverStyle?: MapStyleOptions;&#13;  selectStyle?: MapStyleOptions;&#13;}<pre> see drawStyle type for `MapStyleOptions`||see `consts.ts` for default styles
+drawStyle|Sets the layer style for drawing geometries|<pre lang="typescript">{&#13;  strokeWidth?: number;&#13;  strokeColor?: string;&#13;  fillColor?: string;&#13;  pointRadius?: number;&#13;  pointStrokeWidth?: number;&#13;  pointStrokeColor?: string;&#13;  pointFillColor?: string;&#13;}<pre>||see `consts.ts` for default styles
 
 #### Events
 event|description|parameters
@@ -91,7 +98,6 @@ select|Fired when the user selects (clicks) a feature|feature
 hover|Fired when the user hovers over a feature|feature
 drawstart|Fired when the user starts drawing|feature
 drawend|Fired when a feature is fully drawn by the user|feature
-
 
 ## Development
 To install:
@@ -105,4 +111,7 @@ pnpm dev
 ```
 
 ## License
-...
+
+This code is available for reuse according to the [BSD 3-Clause License](https://opensource.org/license/bsd-3-clause).
+
+&copy; 2025 KurrawongAI

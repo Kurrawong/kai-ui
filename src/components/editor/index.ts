@@ -14,6 +14,8 @@ import nqGrammar from "./grammars/n-quads.tmLanguage.json";
 import javaGrammar from "./grammars/java.tmLanguage.json";
 import xmlGrammar from "./grammars/xml.tmLanguage.json";
 import n3Grammar from "./grammars/n3.tmLanguage.json";
+// import markdownGrammar from "./grammars/markdown.tmLanguage.json";
+// import yamlGrammar from "./grammars/yaml.tmLanguage.json";
 
 export { default as Editor } from "./Editor.vue";
 
@@ -164,6 +166,24 @@ export const languageOptionsUntyped = [
         default: true,
         scopeName: "source.xml",
         grammar: xmlGrammar,
+    },
+    {
+        id: "markdown",
+        label: "Markdown",
+        extensions: ["md"],
+        mimetypes: ["text/markdown"],
+        default: true,
+        // scopeName: "text.html.markdown",
+        // grammar: markdownGrammar,
+    },
+    {
+        id: "yaml",
+        label: "YAML",
+        extensions: ["yaml", "yml"],
+        mimetypes: ["application/yaml"],
+        default: true,
+        // scopeName: "source.yaml",
+        // grammar: yamlGrammar,
     },
     {
         id: "json",
