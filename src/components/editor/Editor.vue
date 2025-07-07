@@ -168,8 +168,8 @@ function downloadFile() {
 }
 
 watch(model, (newValue) => {
-    if (editor.value!.getValue() !== newValue) {
-        editor.value!.setValue(newValue!);
+    if (editor.value && editor.value.getValue() !== newValue) {
+        editor.value.setValue(newValue!);
     }
 });
 
@@ -255,20 +255,20 @@ onUnmounted(() => {
                     :dark="theme === 'dark'"
                 />
                 <span class="text-xs text-muted-foreground" v-else>{{ languageOptions.find(o => o.id === language)?.label }}</span>
-                <Button v-if="!props.hideUploadButton && !props.readonly" variant="outline" size="sm" class="hidden @md:flex" as-child>
+                <Button v-if="!props.hideUploadButton && !props.readonly" variant="outline" size="sm" class="hidden @md:!flex" as-child>
                     <Label for="upload" class="font-normal">Upload
                         <Upload class="size-4" />
                         <Input id="upload" type="file" class="hidden" @change="uploadFile" :accept="filteredLanguageOptions.map(l => l.extensions).flat().map(ext => `.${ext}`).join(',')" />
                     </Label>
                 </Button>
-                <Button v-if="!props.hideCopyButton" variant="outline" size="sm" class="size-8 hidden @md:flex" title="Copy to clipboard"
+                <Button v-if="!props.hideCopyButton" variant="outline" size="sm" class="size-8 hidden @md:!flex" title="Copy to clipboard"
                     @click="copyText">
                     <Copy class="size-4" />
                 </Button>
                 <template v-if="!props.hideDownloadButton">
-                    <Popover v-if="!props.directDownload" class="@md:max-w-[600px]">
+                    <Popover v-if="!props.directDownload" class="@md:!max-w-[600px]">
                         <PopoverTrigger>
-                            <Button variant="outline" size="sm" class="size-8 hidden @md:flex" title="Download file" :disabled="isDownloading">
+                            <Button variant="outline" size="sm" class="size-8 hidden @md:!flex" title="Download file" :disabled="isDownloading">
                                 <Download class="size-4" />
                             </Button>
                         </PopoverTrigger>
@@ -284,7 +284,7 @@ onUnmounted(() => {
                             </div>
                         </PopoverContent>
                     </Popover>
-                    <Button v-else variant="outline" size="sm" class="size-8 hidden @md:flex" title="Download file" @click="downloadFile" :disabled="isDownloading">
+                    <Button v-else variant="outline" size="sm" class="size-8 hidden @md:!flex" title="Download file" @click="downloadFile" :disabled="isDownloading">
                         <Download class="size-4" />
                     </Button>
                 </template>
@@ -292,7 +292,7 @@ onUnmounted(() => {
                     v-if="!props.hideClearButton && !props.readonly"
                     variant="outline"
                     size="sm"
-                    class="hidden @md:flex size-8 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground dark:border-destructive dark:text-destructive dark:hover:bg-destructive dark:hover:text-destructive-foreground"
+                    class="hidden @md:!flex size-8 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground dark:border-destructive dark:text-destructive dark:hover:bg-destructive dark:hover:text-destructive-foreground"
                     title="Clear content"
                     @click="model = ''"
                 >
@@ -301,7 +301,7 @@ onUnmounted(() => {
                 <slot name="toolbar-top-left" />
             </div>
             <div class="editor-toolbar-top-right flex flex-row gap-1 items-center">
-                <Popover v-if="!props.directDownload" class="@md:max-w-[600px]" v-model:open="downloadPopoverOpen" @update:open="$event ? '' : dropdownOpen = false">
+                <Popover v-if="!props.directDownload" class="@md:!max-w-[600px]" v-model:open="downloadPopoverOpen" @update:open="$event ? '' : dropdownOpen = false">
                     <!-- @vue-ignore -->
                     <PopoverAnchor :reference="downloadPopoverRef" />
                     <PopoverContent :class="`flex flex-col gap-2 z-60 ${theme === 'dark' ? 'dark' : ''}`">
@@ -318,7 +318,7 @@ onUnmounted(() => {
                 </Popover>
                 <DropdownMenu v-model:open="dropdownOpen">
                     <DropdownMenuTrigger as-child>
-                        <Button variant="outline" size="sm" class="size-8 flex @md:hidden"><Menu class="size-4" /></Button>
+                        <Button variant="outline" size="sm" class="size-8 flex @md:!hidden"><Menu class="size-4" /></Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent :class="`mr-1 ${theme === 'dark' ? 'dark' : ''}`" @interact-outside="downloadPopoverOpen ? $event.preventDefault() : undefined">
                         <DropdownMenuGroup>
@@ -338,22 +338,24 @@ onUnmounted(() => {
                                 <span class="flex flex-row items-center gap-2">Clear <X class="size-4" /></span>
                             </DropdownMenuItem>
                         </DropdownMenuGroup>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuGroup>
-                            <DropdownMenuItem v-if="!props.hideTheme" @click="theme !== 'system' ? theme === 'dark' ? theme = 'light' : theme = 'dark' : undefined">
-                                <span class="flex flex-row items-center gap-2">
-                                    <template v-if="theme === 'system'">
-                                        System <SunMoon class="size-4" />
-                                    </template>
-                                    <template v-else-if="theme === 'dark'">
-                                        Light Mode <Sun class="size-4" />
-                                    </template>
-                                    <template v-else="theme === 'light'">
-                                        Dark Theme <Moon class="size-4" />
-                                    </template>
-                                </span>
-                            </DropdownMenuItem>
-                        </DropdownMenuGroup>
+                        <template v-if="!props.hideTheme">
+                            <DropdownMenuSeparator />
+                            <DropdownMenuGroup >
+                                <DropdownMenuItem @click="theme !== 'system' ? theme === 'dark' ? theme = 'light' : theme = 'dark' : undefined">
+                                    <span class="flex flex-row items-center gap-2">
+                                        <template v-if="theme === 'system'">
+                                            System <SunMoon class="size-4" />
+                                        </template>
+                                        <template v-else-if="theme === 'dark'">
+                                            Light Mode <Sun class="size-4" />
+                                        </template>
+                                        <template v-else="theme === 'light'">
+                                            Dark Theme <Moon class="size-4" />
+                                        </template>
+                                    </span>
+                                </DropdownMenuItem>
+                            </DropdownMenuGroup>
+                        </template>
                     </DropdownMenuContent>
                 </DropdownMenu>
                 <slot name="toolbar-top-right" />
@@ -361,7 +363,7 @@ onUnmounted(() => {
                     v-if="!props.hideTheme"
                     variant="outline"
                     size="sm"
-                    class="size-8 hidden @md:flex"
+                    class="size-8 hidden @md:!flex"
                     :title="theme !== 'system' ? theme === 'dark' ? 'Set to light theme' : 'Set to dark theme' : undefined"
                     @click="theme !== 'system' ? theme === 'dark' ? theme = 'light' : theme = 'dark' : undefined"
                 >
