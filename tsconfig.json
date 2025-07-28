@@ -24,7 +24,8 @@
             "@/*": [
                 "./src/*"
             ]
-        }
+        },
+        "allowSyntheticDefaultImports": true,
     },
     "include": [
         "env.d.ts",
@@ -35,6 +36,8 @@
     "exclude": [
         "src/main.ts",
         "src/**/__tests__/*",
-        "src/App.vue"
+        "src/App.vue",
+        "src/views/*",
+        "src/router/*",
     ],
 }
