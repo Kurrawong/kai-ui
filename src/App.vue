@@ -158,6 +158,20 @@ function select (feature) {
     }
 }
 
+// this little hack keeps the map where it's at after (re-)loading the layers after a query
+let currentZoom = 4.5;
+const onChangeZoom = (newZoom) => {
+  currentZoom = newZoom;
+}
+let currentCenter = [133.7751, -25.2744];
+const onChangeCenter = (newCenter) => {
+  currentCenter = newCenter;
+}
+let currentRotation = 0;
+const onChangeRotation = (newRotation) => {
+  currentRotation = newRotation;
+}
+
 </script>
 
 <template>
@@ -180,27 +194,32 @@ function select (feature) {
 
         <h2>OpenLayers Map</h2>
         <div class="flex flex-row gap-2 items-center">
-          <Button variant="outline" @click="loadMapData">Load data</Button>
-          <Button variant="destructive" @click="clearMapData">Clear data</Button>
-        </div>
-        <div class="flex flex-row gap-2 items-center">
-            <label for="checkbox">Enable Draw Mode</label>
-            <input type="checkbox" id="checkbox" v-model="drawEnabled" />
+            <p>Features:</p>
+            <ul>
+              <li>Select an area on the map by enabling draw mode using the polygon icon (&#9186;) at the top of the map.</li>
+              <li><Button variant="outline" @click="loadMapData">Load data</Button></li>
+              <li><Button variant="destructive" @click="clearMapData">Clear data</Button></li>
+            </ul>
         </div>
 
         <Map class="kai-demo-map"
-            :center="[133.7751, -25.2744]"
-            :zoom="4"
-            :rotation="0"
-            :projection="'EPSG:4326'"
-            :layers="layers"
-            :loading="loading"
-            :drawEnabled="drawEnabled"
-            :mapStyle="mapStyle"
-            :drawStyle="drawStyle"
-            @drawend="drawend"
-            @select="select"
-        />
+          :center="currentCenter"
+          @change:center="onChangeCenter"
+          :zoom="currentZoom"
+          @change:zoom="onChangeZoom"
+          :rotation="currentRotation"
+          @change:rotation="onChangeRotation"
+          :projection="'EPSG:4326'"
+          :layers="layers"
+          :loading="loading"
+          :drawEnabled="drawEnabled"
+          :clearDrawingsOnLayerChange="false"
+          :fitAddedLayersToExtent="true"
+          :animationDuration="1000"
+          :enableCustomMapControls="true"
+          :tooltipIriQueryString="'_profile=alt'"
+          @drawend="drawend"
+          @select="select" />
 
     </div>
 </template>
