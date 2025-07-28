@@ -30,6 +30,9 @@ import type { Language } from "@/types";
 const props = defineProps<{
     languages?: Language[];
     hideToolbar?: boolean;
+    /**
+     * @see https://microsoft.github.io/monaco-editor/typedoc/interfaces/editor.IStandaloneEditorConstructionOptions.html
+     */
     options?: Omit<monaco.editor.IStandaloneEditorConstructionOptions, "value" | "language" | "theme">;
     hideLanguage?: boolean;
     hideTheme?: boolean;
@@ -38,6 +41,7 @@ const props = defineProps<{
     hideUploadButton?: boolean;
     hideDownloadButton?: boolean;
     disableDrag?: boolean;
+    disableResize?: boolean;
     readonly?: boolean;
     downloadFilename?: string;
     directDownload?: boolean;
@@ -215,7 +219,7 @@ onUnmounted(() => {
 
 <template>
     <div
-        :class="cn(`border h-[400px] flex flex-col ${isDragging ? 'border-eye shadow' : ''}`, props.class)"
+        :class="cn(`border h-[400px] flex flex-col ${props.disableResize ? '' : `resize-y overflow-y-auto ${props.hideToolbar ? '' : 'min-h-[calc(41px+25px)]'}`} ${isDragging ? 'border-eye shadow' : ''}`, props.class)"
         @dragenter.prevent="isDragging = true"
         @dragover.prevent="isDragging = true"
         @dragend.prevent="isDragging = false"
@@ -373,7 +377,7 @@ onUnmounted(() => {
                 </Button>
             </div>
         </div>
-        <div class="editor grow" ref="editorContainer"></div>
+        <div :class="`editor ${props.hideToolbar ? 'h-full' : 'h-[calc(100%-41px-25px)]'}`" ref="editorContainer"></div>
         <div v-if="isEditorReady && !props.hideToolbar" :class="`editor-bottom-toolbar flex flex-row items-center justify-between gap-1 text-foreground border-t p-1 ${theme === 'dark' ? 'dark bg-[#181818]' : 'bg-[#f8f8f8]'}`">
             <div class="editor-toolbar-bottom-left flex flex-row gap-1 items-center">
                 <span class="text-xs text-muted-foreground">F1 for Command Palette</span>

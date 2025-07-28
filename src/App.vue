@@ -39,7 +39,7 @@ const links = [
                 <SunMoon v-else class="size-4" />
             </Button>
         </nav>
-        <div class="">
+        <div class="p-2">
             <RouterView></RouterView>
         </div>
     </div>
