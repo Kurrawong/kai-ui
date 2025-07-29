@@ -42,5 +42,8 @@ export default defineConfig({
         alias: {
             "@": fileURLToPath(new URL("./src", import.meta.url))
         }
-    }
+    },
+    // ssr: {
+    //     noExternal: ['to-px'],
+    // },
 });

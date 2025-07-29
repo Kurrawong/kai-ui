@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { shallowRef, useTemplateRef, onMounted, onUnmounted, watchEffect, nextTick, watch, computed, type HTMLAttributes, ref } from "vue";
+import { shallowRef, useTemplateRef, onMounted, onUnmounted, watchEffect, nextTick, watch, computed, type HTMLAttributes, ref, useId } from "vue";
 import { Copy, X, Upload, Download, Sun, Moon, SunMoon, Menu } from "lucide-vue-next";
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import { loadWASM } from "onigasm";
@@ -26,6 +26,8 @@ import { languageOptions, setupGrammars } from ".";
 import darkModernTheme from "./themes/dark_modern.json";
 import lightModernTheme from "./themes/light_modern.json";
 import type { Language } from "@/types";
+
+const componentId = useId();
 
 const props = defineProps<{
     languages?: Language[];
@@ -260,9 +262,9 @@ onUnmounted(() => {
                 />
                 <span class="text-xs text-muted-foreground" v-else>{{ languageOptions.find(o => o.id === language)?.label }}</span>
                 <Button v-if="!props.hideUploadButton && !props.readonly" variant="outline" size="sm" class="hidden @md:!flex" as-child>
-                    <Label for="upload" class="font-normal">Upload
+                    <Label :for="`upload-${componentId}`" class="font-normal">Upload
                         <Upload class="size-4" />
-                        <Input id="upload" type="file" class="hidden" @change="uploadFile" :accept="filteredLanguageOptions.map(l => l.extensions).flat().map(ext => `.${ext}`).join(',')" />
+                        <Input :id="`upload-${componentId}`" type="file" class="hidden" @change="uploadFile" :accept="filteredLanguageOptions.map(l => l.extensions).flat().map(ext => `.${ext}`).join(',')" />
                     </Label>
                 </Button>
                 <Button v-if="!props.hideCopyButton" variant="outline" size="sm" class="size-8 hidden @md:!flex" title="Copy to clipboard"

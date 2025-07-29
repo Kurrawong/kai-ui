@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed, onMounted, ref } from "vue";
 import { VisSingleContainer, VisGraph } from "@unovis/vue";
-import { type GraphLinkLabel, type GraphConfigInterface, Graph, GraphNodeSelectionHighlightMode, type GraphNode as Node, type VisEventType } from "@unovis/ts";
+import { type GraphLinkLabel, type GraphConfigInterface, Graph, GraphNodeSelectionHighlightMode, type GraphNode as Node } from "@unovis/ts";
 import { Eye, EyeClosed } from "lucide-vue-next";
 import init, * as oxigraph from "oxigraph/web";
 import type { GraphNode, GraphLink, GraphData, RDFFormat } from "@/types";
@@ -42,6 +42,8 @@ const props = defineProps<{
             node?: string;
             literal?: string;
             bnode?: string;
+            nodeBorderColor?: string;
+
         };
     };
     /**
@@ -76,13 +78,13 @@ const data = computed(() => {
     return initialised.value ? rdfToChart(props.data, props.options?.format) : {nodes: [], links: []};
 });
 
-const nodeLabel = (n: GraphNode, i: number) => n.label;
-const linkLabel = (l: GraphLink, i: number): GraphLinkLabel => ({ text: l.label });
+const nodeLabel = (n: GraphNode) => n.label;
+const linkLabel = (l: GraphLink): GraphLinkLabel => ({ text: l.label });
 
 const defaultGraphOptions: GraphConfigInterface<GraphNode, GraphLink> = {
     nodeSize: 30,
     linkWidth: 2,
-    nodeFill: (n: GraphNode, i: number) => n.type === "node" ? props.options?.style?.node || "hsl(47.9, 95.8%, 53.1%)" : (n.type === "bnode" ? props.options?.style?.bnode || "grey" : props.options?.style?.literal || "#12100e"),
+    nodeFill: (n: GraphNode) => n.type === "node" ? props.options?.style?.node || "hsl(47.9, 95.8%, 53.1%)" : (n.type === "bnode" ? props.options?.style?.bnode || "grey" : props.options?.style?.literal || "#12100e"),
     linkArrow: true,
     forceLayoutSettings: {
         linkDistance: 80,
@@ -174,7 +176,7 @@ function rdfToChart(s: string, format: RDFFormat = "text/turtle"): GraphData {
 }
 
 onMounted(() => {
-    init("https://cdn.jsdelivr.net/npm/oxigraph@0.5.0-beta.1/web_bg.wasm").then(() => {
+    init("https://cdn.jsdelivr.net/npm/oxigraph@0.4.9/web_bg.wasm").then(() => {
         initialised.value = true;
     });
 });
@@ -197,3 +199,36 @@ onMounted(() => {
         </Button>
     </div>
 </template>
+
+<style>
+/* dark theme overrides until Unovis supports configuring the target class for detecting dark theme */
+html.dark {
+    --vis-graph-node-stroke-color: var(--vis-dark-graph-node-stroke-color);
+    --vis-graph-node-fill-color: var(--vis-dark-graph-node-fill-color);
+    --vis-graph-node-gauge-color: var(--vis-dark-graph-node-gauge-color);
+    --vis-graph-node-selection-color: var(--vis-dark-graph-node-selection-color);
+    --vis-graph-node-icon-fill-color: var(--vis-dark-graph-node-icon-fill-color);
+    --vis-graph-node-bottom-icon-fill-color: var(--vis-dark-graph-node-bottom-icon-fill-color);
+    --vis-graph-node-bottom-icon-stroke-color: var(--vis-dark-graph-node-bottom-icon-stroke-color);
+    --vis-graph-node-label-background: var(--vis-dark-graph-node-label-background);
+    --vis-graph-node-label-text-color: var(--vis-dark-graph-node-label-text-color);
+    --vis-graph-node-sublabel-text-color: var(--vis-dark-graph-node-sublabel-text-color);
+    --vis-graph-node-side-label-background-fill-color: var(--vis-dark-graph-node-side-label-background-fill-color);
+    --vis-graph-node-side-label-background-stroke-color: var(--vis-dark-graph-node-side-label-background-stroke-color);
+    --vis-graph-node-side-label-fill-color-bright: var(--vis-dark-graph-node-side-label-fill-color-bright);
+    --vis-graph-node-side-label-fill-color-dark: var(--vis-dark-graph-node-side-label-fill-color-dark);
+    --vis-graph-node-greyout-color: var(--vis-dark-graph-node-greyout-color);
+    --vis-graph-node-icon-greyout-color: var(--vis-dark-graph-node-icon-greyout-color);
+    --vis-graph-node-side-label-background-greyout-color: var(--vis-dark-graph-node-side-label-background-greyout-color);
+    --vis-graph-link-stroke-color: var(--vis-dark-graph-link-stroke-color);
+    --vis-graph-link-label-background: var(--vis-dark-graph-link-label-background);
+    --vis-graph-link-label-text-color: var(--vis-dark-graph-link-label-text-color);
+    --vis-graph-panel-border-color: var(--vis-dark-graph-panel-border-color);
+    --vis-graph-panel-fill-color: var(--vis-dark-graph-panel-fill-color);
+    --vis-graph-panel-label-color: var(--vis-dark-graph-panel-label-color);
+    --vis-graph-panel-label-background: var(--vis-dark-graph-panel-label-background);
+    --vis-graph-panel-side-icon-symbol-color: var(--vis-dark-graph-panel-side-icon-symbol-color);
+    --vis-graph-panel-side-icon-shape-fill-color: var(--vis-dark-graph-panel-side-icon-shape-fill-color);
+    --vis-graph-panel-border-color: var(--vis-dark-graph-panel-border-color);
+}
+</style>
