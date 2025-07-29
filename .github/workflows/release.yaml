@@ -38,9 +38,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install
       - name: Update version
-        run: |
-          echo "NEW_VERSION=$(pnpm version ${{ github.event.inputs.release-type }} --git-tag-version false)" >> $GITHUB_ENV
-          pnpm version ${{ github.event.inputs.release-type }} --git-tag-version false
+        run: echo "NEW_VERSION=$(pnpm version ${{ github.event.inputs.release-type }} --git-tag-version false)" >> $GITHUB_ENV
       - name: Build
         run: pnpm build
       - name: Publish to NPM
