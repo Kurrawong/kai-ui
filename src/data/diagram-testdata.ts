@@ -1,0 +1,210 @@
+export const KURRAWONG_DATA = `PREFIX schema: <https://schema.org/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+<https://kurrawong.ai/people/#david-habgood>
+    a schema:Person ;
+    schema:name "David Habgood"@en ;
+    schema:worksFor <https://kurrawong.ai> ;
+.
+
+<https://kurrawong.ai/people/#edmond-chuc>
+    a schema:Person ;
+    schema:name "Edmond Chuc"@en ;
+    schema:worksFor <https://kurrawong.ai> ;
+.
+
+<https://kurrawong.ai/people/#howard-johns>
+    a schema:Person ;
+    schema:name "Howard Johns"@en ;
+    schema:worksFor <https://kurrawong.ai> ;
+.
+
+<https://kurrawong.ai/people/#jamie-feiss>
+    a schema:Person ;
+    schema:name "Jamie Feiss"@en ;
+    schema:worksFor <https://kurrawong.ai> ;
+.
+
+<https://kurrawong.ai/people/#lawson-lewis>
+    a schema:Person ;
+    schema:name "Lawson Lewis"@en ;
+    schema:worksFor <https://kurrawong.ai> ;
+.
+
+<https://kurrawong.ai/people/#les-kneebone>
+    a schema:Person ;
+    schema:name "Les Kneebone"@en ;
+    schema:worksFor <https://kurrawong.ai> ;
+.
+
+<https://kurrawong.ai/people/#margie-smith>
+    a schema:Person ;
+    schema:name "Margie Smith"@en ;
+    schema:worksFor <https://kurrawong.ai> ;
+.
+
+<https://kurrawong.ai/people/#monique-harris>
+    a schema:Person ;
+    schema:name "Monique Harris"@en ;
+    schema:worksFor <https://kurrawong.ai> ;
+.
+
+<https://kurrawong.ai/people/#sophie-darnell>
+    a schema:Person ;
+    schema:name "Sophie Darnell"@en ;
+    schema:worksFor <https://kurrawong.ai> ;
+.
+
+<https://orcid.org/0000-0002-8742-7730>
+    a schema:Person ;
+    schema:name "Nicholas Car"@en ;
+    schema:worksFor <https://kurrawong.ai> ;
+.
+
+<https://kurrawong.ai>
+    a schema:Organization ;
+    schema:description "KurrawongAI is a small, Australian-based IT company, specialising in Knowledge Graphs, Data Modelling & AI." ;
+    schema:identifier "31 353 542 036"^^<http://linked.data.gov.au/def/party-identifier-type/abn> ;
+    schema:name "KurrawongAI" ;
+    schema:url "https://kurrawong.ai"^^xsd:anyURI ;
+.`;
+
+export const TEST_VOCAB = `PREFIX cs: <https://linked.data.gov.au/def/data-access-rights>
+PREFIX : <https://linked.data.gov.au/def/data-access-rights/>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX prov: <http://www.w3.org/ns/prov#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX reg: <http://purl.org/linked-data/registry#>
+PREFIX schema: <https://schema.org/>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+:closed-access-rights
+    a skos:Collection ;
+    rdfs:isDefinedBy cs: ;
+    skos:definition "Selective restriction of access to data that is OFFICIAL (low or negligible confidentiality impact), SENSITIVE (moderate confidentiality impact) or PROTECTED (high confidentiality impact)."@en ;
+    skos:historyNote "Added by the Geological Survey of Queensland, 2018" ;
+    skos:inScheme cs: ;
+    skos:member
+        :conditional ,
+        :embargoed ,
+        :metadata-only ,
+        :protected ,
+        :restricted ;
+    skos:prefLabel "Closed data access rights"@en ;
+.
+
+:open-access-rights
+    a skos:Collection ;
+    rdfs:isDefinedBy cs: ;
+    skos:definition "Data that is non-sensitive, freely available, easily discovered and accessed, and published in ways and with licences that allow easy reuse."@en ;
+    skos:historyNote "Added by the Geological Survey of Queensland, 2018" ;
+    skos:inScheme cs: ;
+    skos:member :open ;
+    skos:prefLabel "Open data access rights"@en ;
+.
+
+:conditional
+    a skos:Concept ;
+    skos:definition "Conditionally protected access refers to a resource that is stored in a system but is not freely accessible and remains protected based on the satisfaction of other specified criteria. Access is limited to specific personnel or user groups. "@en ;
+    skos:historyNote "Original term in the COAR vocabulary" ;
+    skos:inScheme cs: ;
+    skos:prefLabel "Conditionally protected"@en ;
+    skos:narrower :metadata-only ;
+.
+
+:embargoed
+    a skos:Concept ;
+    skos:definition "Embargoed access refers to a resource accessible as metadata only until released for open access on a specified date."@en ;
+    skos:historyNote "Original term in the COAR vocabulary" ;
+    skos:inScheme cs: ;
+    skos:prefLabel "Embargoed access"@en ;
+.
+
+:metadata-only
+    a skos:Concept ;
+    skos:definition "Metadata only access refers to a resource in which access is limited to metadata only. Access to the resource requires granting of access rights."@en ;
+    skos:historyNote "Original term in the COAR vocabulary" ;
+    skos:inScheme cs: ;
+    skos:prefLabel "Metadata only access"@en ;
+.
+
+:open
+    a skos:Concept ;
+    skos:altLabel "Open file"@en ;
+    skos:definition "Open access refers to a resource that is immediately and permanently online, and free for all on the Web, without financial and technical barriers."@en ;
+    skos:historyNote "Original term in the COAR vocabulary" ;
+    skos:inScheme cs: ;
+    skos:prefLabel "Open access"@en ;
+    skos:topConceptOf cs: ;
+.
+
+:protected
+    a skos:Concept ;
+    skos:definition "Protected access refers to a resource that is stored in a system but is not freely accessible due to specific legal or policy decisions, such as active legal proceedings or ministerial discretion. Access is limited to specific personnel or user groups. "@en ;
+    skos:historyNote "Original term in the COAR vocabulary" ;
+    skos:inScheme cs: ;
+    skos:prefLabel "Protected access"@en ;
+.
+
+:restricted
+    a skos:Concept ;
+    skos:definition "Restricted access refers to a resource that is stored in a system but is not freely accessible. Access is limited to specific personnel or user groups."@en ;
+    skos:historyNote "Original term in the COAR vocabulary" ;
+    skos:inScheme cs: ;
+    skos:prefLabel "Restricted access"@en ;
+    skos:topConceptOf cs: ;
+    skos:narrower
+        :protected ,
+        :conditional ,
+        :embargoed ,
+        :limited-communities-access ;
+.
+
+:limited-communities-access
+    a skos:Concept ;
+    reg:status <https://linked.data.gov.au/def/reg-statuses/addition> ;
+    skos:definition "Access is limited to particular communities only"@en ;
+    skos:historyNote "Created by the Indigenous Data Network, 2024" ;
+    skos:inScheme cs: ;
+    skos:prefLabel "Limited Communities Access"@en ;
+    skos:narrower :indigenous-communities-access ;
+.
+
+:indigenous-communities-access
+    a skos:Concept ;
+    reg:status <https://linked.data.gov.au/def/reg-statuses/addition> ;
+    skos:definition "Access is limited to particular indigenous communities only"@en ;
+    skos:historyNote "Created by the Indigenous Data Network, 2024" ;
+    skos:inScheme cs: ;
+    skos:prefLabel "Indigenous Communities Access"@en ;
+.
+
+<https://linked.data.gov.au/org/gsq>
+    a schema:Organization ;
+    schema:name "Geological Survey of Queensland" ;
+    schema:url "http://www.business.qld.gov.au/industries/mining-energy-water/resources/geoscience-information/gsq"^^xsd:anyURI ;
+.
+
+cs:
+    a
+        owl:Ontology ,
+        skos:ConceptScheme ;
+    dcterms:created "2019-04-03"^^xsd:date ;
+    dcterms:creator <https://linked.data.gov.au/org/gsq> ;
+    dcterms:modified "2021-02-08"^^xsd:date ;
+    dcterms:publisher <https://linked.data.gov.au/org/gsq> ;
+    dcterms:source "http://vocabularies.coar-repositories.org/documentation/access_rights/"^^xsd:anyURI ;
+    reg:status <https://linked.data.gov.au/def/reg-statuses/stable> ;
+    skos:definition "Data access rights control how users and systems access a data resource."@en ;
+    skos:historyNote "This vocabulary is taken from the COAR Controlled Vocabularies Interest Group (http://vocabularies.coar-repositories.org/documentation/access_rights/) but is redelivered as that vocabulary isn't well presented online."@en ;
+    skos:prefLabel "Data Access Rights"@en ;
+    skos:hasTopConcept
+        :open ,
+        :restricted ;
+    prov:qualifiedDerivation [
+        prov:entity cs: ;
+        prov:hadRole <https://linked.data.gov.au/def/vocdermods/none> ;
+    ] ;
+.`;
