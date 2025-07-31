@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { shallowRef, useTemplateRef, onMounted, onUnmounted, watchEffect, nextTick, watch, computed, type HTMLAttributes, ref } from "vue";
+import { shallowRef, useTemplateRef, onMounted, onUnmounted, watchEffect, nextTick, watch, computed, type HTMLAttributes, ref, useId } from "vue";
 import { Copy, X, Upload, Download, Sun, Moon, SunMoon, Menu } from "lucide-vue-next";
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import { loadWASM } from "onigasm";
@@ -27,9 +27,14 @@ import darkModernTheme from "./themes/dark_modern.json";
 import lightModernTheme from "./themes/light_modern.json";
 import type { Language } from "@/types";
 
+const componentId = useId();
+
 const props = defineProps<{
     languages?: Language[];
     hideToolbar?: boolean;
+    /**
+     * @see https://microsoft.github.io/monaco-editor/typedoc/interfaces/editor.IStandaloneEditorConstructionOptions.html
+     */
     options?: Omit<monaco.editor.IStandaloneEditorConstructionOptions, "value" | "language" | "theme">;
     hideLanguage?: boolean;
     hideTheme?: boolean;
@@ -38,6 +43,7 @@ const props = defineProps<{
     hideUploadButton?: boolean;
     hideDownloadButton?: boolean;
     disableDrag?: boolean;
+    disableResize?: boolean;
     readonly?: boolean;
     downloadFilename?: string;
     directDownload?: boolean;
@@ -215,7 +221,7 @@ onUnmounted(() => {
 
 <template>
     <div
-        :class="cn(`border h-[400px] flex flex-col ${isDragging ? 'border-eye shadow' : ''}`, props.class)"
+        :class="cn(`border h-[400px] flex flex-col ${props.disableResize ? '' : `resize-y overflow-y-auto ${props.hideToolbar ? '' : 'min-h-[calc(41px+25px)]'}`} ${isDragging ? 'border-eye shadow' : ''}`, props.class)"
         @dragenter.prevent="isDragging = true"
         @dragover.prevent="isDragging = true"
         @dragend.prevent="isDragging = false"
@@ -256,9 +262,9 @@ onUnmounted(() => {
                 />
                 <span class="text-xs text-muted-foreground" v-else>{{ languageOptions.find(o => o.id === language)?.label }}</span>
                 <Button v-if="!props.hideUploadButton && !props.readonly" variant="outline" size="sm" class="hidden @md:!flex" as-child>
-                    <Label for="upload" class="font-normal">Upload
+                    <Label :for="`upload-${componentId}`" class="font-normal">Upload
                         <Upload class="size-4" />
-                        <Input id="upload" type="file" class="hidden" @change="uploadFile" :accept="filteredLanguageOptions.map(l => l.extensions).flat().map(ext => `.${ext}`).join(',')" />
+                        <Input :id="`upload-${componentId}`" type="file" class="hidden" @change="uploadFile" :accept="filteredLanguageOptions.map(l => l.extensions).flat().map(ext => `.${ext}`).join(',')" />
                     </Label>
                 </Button>
                 <Button v-if="!props.hideCopyButton" variant="outline" size="sm" class="size-8 hidden @md:!flex" title="Copy to clipboard"
@@ -373,7 +379,7 @@ onUnmounted(() => {
                 </Button>
             </div>
         </div>
-        <div class="editor grow" ref="editorContainer"></div>
+        <div :class="`editor ${props.hideToolbar ? 'h-full' : 'h-[calc(100%-41px-25px)]'}`" ref="editorContainer"></div>
         <div v-if="isEditorReady && !props.hideToolbar" :class="`editor-bottom-toolbar flex flex-row items-center justify-between gap-1 text-foreground border-t p-1 ${theme === 'dark' ? 'dark bg-[#181818]' : 'bg-[#f8f8f8]'}`">
             <div class="editor-toolbar-bottom-left flex flex-row gap-1 items-center">
                 <span class="text-xs text-muted-foreground">F1 for Command Palette</span>
