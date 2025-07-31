@@ -24,6 +24,7 @@ export type MapFeature = {
     name: string;
     wkt?: string;
     geoJSON?: any;
+    data?: any;
 };
 
 export type MapLayer = {

@@ -4,13 +4,13 @@ import { onMounted, onUnmounted } from "vue";
 const props = defineProps<{
     type?: string;
     iri?: string; // the object iri to link to
-    iriQueryString?: string; // an optional querystring that will be included with the object uri. E.g., an alternate prez profile
-    selectedFeature: Feature;
+    queryString?: string; // an optional querystring that will be included with the object uri. E.g., an alternate prez profile
+    selectedFeature: any;
 }>();
 
 const emit = defineEmits(["deselect", "select"]);
 
-function select(fitToFeatureExtent) {
+function select(fitToFeatureExtent: boolean) {
     emit("select", props.selectedFeature, fitToFeatureExtent);
 }
 
@@ -25,7 +25,7 @@ function onEscape(e: KeyboardEvent) {
 }
 
 // convert a camelCase property to a human readable Title Case property
-function convertToTitleCase(text) {
+function convertToTitleCase(text: string) {
   if (text?.length > 1) {
     return text.charAt(0).toUpperCase() + text.replace(/([A-Z])/g, " $1").slice(1);
   }

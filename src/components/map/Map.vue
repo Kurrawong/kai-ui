@@ -1,72 +1,50 @@
 <script lang="ts" setup>
-import { ref, provide, useTemplateRef, watch } from "vue";
-import { Map, Layers, Sources, Geometries, Styles, MapControls, Interactions, type Vue3OpenlayersGlobalOptions } from "vue3-openlayers";
-import type Feature from "ol/Feature";
+import { ref, provide, watch } from "vue";
+import { Map, Layers, Sources, Styles, MapControls, Interactions, type Vue3OpenlayersGlobalOptions } from "vue3-openlayers";
 import { GeoJSON, WKT } from "ol/format";
 import { bbox } from "ol/loadingstrategy";
-import { pointerMove, click } from "ol/events/condition";
-import { getCenter, type Extent } from "ol/extent";
+import { click } from "ol/events/condition";
+import { getCenter } from "ol/extent";
 import { SelectEvent } from "ol/interaction/Select";
 import Style from "ol/style/Style";
-import Stroke from "ol/style/Stroke";
 import { getArea } from "ol/sphere";
-import { mapLayerStyles, drawStyle, hoverStyle } from "./mapstyles.ts";
+import { drawStyle } from "./mapstyles.ts";
 import 'vue3-openlayers/dist/vue3-openlayers.css';
 import MapTooltip from "./MapTooltip.vue";
+import type { Extent } from "ol/extent";
+import type { ProjectionLike } from "ol/proj";
+import type { Type } from "ol/geom/Geometry";
+interface Props {
+    center?: number[];
+    zoom?: number;
+    rotation?: number;
+    projection?: ProjectionLike;
+    focusSourceRef?: any;
+    layers?: any[];
+    loading?: boolean;
+    drawEnabled?: boolean;
+    clearDrawingsOnLayerChange?: boolean;
+    fitAddedLayersToExtent?: boolean;
+    animationDuration?: number | undefined;
+    enableCustomMapControls?: boolean;
+    tooltipIriQueryString?: string;
+}
 
-const props = defineProps({
-    center: {
-        type: Array as () => number[],
-        default: () => [133.7751, -25.2744]
-    },
-    zoom: {
-        type: Number,
-        default: 4
-    },
-    rotation: {
-        type: Number,
-        default: 0
-    },
-    projection: {
-        type: String,
-        default: 'EPSG:4326'
-    },
-    focusSourceRef: {
-        type: typeof Sources.OlSourceVector,
-        default: null
-    },
-    layers: {
-        type: Array,
-        default: () => []
-    },
-    loading: {
-        type: Boolean,
-        default: false
-    },
-    drawEnabled: {
-        type: Boolean,
-        default: false
-    },
-    clearDrawingsOnLayerChange: {
-        type: Boolean,
-        default: false
-    },
-    fitAddedLayersToExtent: {
-        type: Boolean,
-        default: false
-    },
-    animationDuration: {
-        type: Number,
-        default: null
-    },
-    enableCustomMapControls: {
-        type: Boolean,
-        default: false
-    },
+const props = withDefaults(defineProps<Props>(), {
+    center: () => [133.7751, -25.2744],
+    zoom: 4,
+    rotation: 0,
+    projection: 'EPSG:4326',
+    focusSourceRef: undefined,
+    layers: () => [],
+    loading: false,
+    drawEnabled: false,
+    clearDrawingsOnLayerChange: false,
+    fitAddedLayersToExtent: false,
+    animationDuration: undefined,
+    enableCustomMapControls: false,
     // TODO: ideally, we just add a slot to the tooltip for customization
-    tooltipIriQueryString: {
-      type: String
-    }
+    tooltipIriQueryString: undefined
 });
 const emit = defineEmits(['drawstart', 'drawend', 'select', 'hover', 'change:zoom', 'change:center', 'change:rotation'])
 
@@ -83,23 +61,23 @@ watch(() => props.rotation, (newVal) => { rotation.value = newVal; }, { immediat
 const currentZoom = ref(zoom.value);
 const currentCenter = ref(center.value);
 const currentRotation = ref(rotation.value);
-function resolutionChanged(event) {
+function resolutionChanged(event: any) {
   currentZoom.value = event.target.getZoom();
   emit('change:zoom', currentZoom.value);
 }
-function centerChanged(event) {
+function centerChanged(event: any) {
   currentCenter.value = event.target.getCenter();
   emit('change:center', currentCenter.value);
 }
-function rotationChanged(event) {
+function rotationChanged(event: any) {
   currentRotation.value = event.target.getRotation();
   emit('change:rotation', currentRotation.value);
 }
 
 const mapRef = ref<InstanceType<typeof Map.OlMap> | null>(null);
 const viewRef = ref<InstanceType<typeof Map.OlView> | null>(null);
-const layersRef = ref<Array<InstanceType<typeof Map.OlVectorLayer>>| null>(null);
-const layerSourcesRef = ref<Array<InstanceType<typeof Map.OlSourceVector>>| null>(null);
+const layersRef = ref<Array<InstanceType<typeof Layers.OlVectorLayer>>| null>(null);
+const layerSourcesRef = ref<Array<InstanceType<typeof Sources.OlSourceVector>>| null>(null);
 const clickSelectRef = ref<InstanceType<typeof Interactions.OlInteractionSelect> | null>(null);
 const drawSourceRef = ref<InstanceType<typeof Sources.OlSourceVector> | null>(null);
 
@@ -109,49 +87,37 @@ const options: Vue3OpenlayersGlobalOptions = {
 
 provide("ol-options", options);
 
-const hoveredFeature = ref<Feature | null>(null);
-const selectedFeature = ref<Feature | null>(null);
-const selectedFeatures = ref<Array<Feature>>([]);
-const selectedPosition = ref<number[]>([]);
+const selectedFeature = ref<any | undefined>(undefined);
+const selectedFeatures = ref<Array<any>>([]);
+const selectedPosition = ref<number[] | undefined>(undefined);
 
-function featureHover(e: SelectEvent) {
-    let selection = null;
-    if (e.selected.length === 1) {
-        selection = e.selected[0];
-        hoveredFeature.value = e.selected[0];
-    } else {
-        hoveredFeature.value = null;
-    }
-    if (selection) {
-      emit('hover', selection);
-    }
-}
-
-function getFeatureCenter(feature: Feature) {
+function getFeatureCenter(feature: any) {
   if (feature && feature.getGeometry) {
     return getCenter(feature.getGeometry()!.getExtent());
   }
-  return null;
+  return undefined;
 }
 
-function selectFeature(feature, fitToFeatureExtent) {
+function selectFeature(feature: any, fitToFeatureExtent: boolean) {
   selectedFeatures.value = [];
   selectedFeature.value = feature;
   let selection = getFeatureCenter(feature);
   selectedPosition.value = selection;
-  clickSelectRef.value.select.getFeatures().clear();
-  clickSelectRef.value.select.getFeatures().push(feature);
-  if (fitToFeatureExtent) {
-    const extent = feature.getGeometry().getExtent();
+  if (clickSelectRef.value) {
+    clickSelectRef.value.select.getFeatures().clear();
+    clickSelectRef.value.select.getFeatures().push(feature);
+  }
+  if (fitToFeatureExtent && feature.getGeometry()) {
+    const extent = feature.getGeometry()!.getExtent();
     fitToExtent(extent);
   }
-  if (selectedFeature.value?.name) {
+  if ((selectedFeature.value as any)?.name) {
     emit('select', selectedFeature.value);
   }
 }
 
 function featureClick(e: SelectEvent) {
-    let selection = null;
+    let selection = undefined;
 
     if (e.selected.length > 0) {
         // depending on props.clickThroughOverlappingFeatures, we handle 1 selected feature, or all of the features at the clicked location
@@ -162,26 +128,28 @@ function featureClick(e: SelectEvent) {
         // 2. handle all features at the clicked location
         let clickLocation = e.mapBrowserEvent.pixel;
 
-        let overlappingFeatures = [];
-        mapRef.value.forEachFeatureAtPixel(clickLocation, function (feature, layer) {
-          if (feature.name) {
-            overlappingFeatures.push(feature);
-          }
-        });
+        let overlappingFeatures: any[] = [];
+        if (mapRef.value) {
+          mapRef.value.forEachFeatureAtPixel(clickLocation, function (feature: any) {
+            if (feature.name) {
+              overlappingFeatures.push(feature);
+            }
+          });
+        }
         selectedFeatures.value = overlappingFeatures;
     } else {
-        selectedFeature.value = null;
+        selectedFeature.value = undefined;
         selectedFeatures.value = [];
     }
-    if (selectedFeature.value?.name) {
+    if ((selectedFeature.value as any)?.name) {
       emit('select', selectedFeature.value);
     }
 }
 
-function escapeOverlay(selectedFeatureIndex) {
+function escapeOverlay(selectedFeatureIndex: number) {
     if (clickSelectRef.value && selectedFeature.value) {
         clickSelectRef.value.select.getFeatures().clear();
-        selectedFeature.value = null;
+        selectedFeature.value = undefined;
     }
     if (selectedFeatureIndex > -1) {
       selectedFeatures.value.splice(selectedFeatureIndex, 1);
@@ -191,7 +159,7 @@ function escapeOverlay(selectedFeatureIndex) {
 }
 
 const drawEnabled = ref(props.drawEnabled);
-const drawType = ref('Polygon');
+const drawType = ref<Type>('Polygon');
 watch(() => props.drawEnabled, (newVal) => { drawEnabled.value = newVal; }, { immediate:true });
 
 const drawModeEnabled = ref(drawEnabled.value);
@@ -200,15 +168,15 @@ function enableDrawMode () {
   drawModeEnabled.value = !drawModeEnabled.value;
 }
 
-const drawnFeatures : any[] = ref([]);
+const drawnFeatures = ref<any[]>([]);
 
-const drawstart = (event) => {
-    emit('drawstart', geoJSONFormat.writeFeature(event.feature, props.projection));
+const drawstart = (event: any) => {
+    emit('drawstart', geoJSONFormat.writeFeature(event.feature, { dataProjection: props.projection }));
 };
 
-const drawend = (event) => {
-    const geoJSON = geoJSONFormat.writeFeature(event.feature, props.projection)
-    const wkt = wktFormat.writeFeature(event.feature, props.projection)
+const drawend = (event: any) => {
+    const geoJSON = geoJSONFormat.writeFeature(event.feature, { dataProjection: props.projection })
+    const wkt = wktFormat.writeFeature(event.feature, { dataProjection: props.projection })
     drawnFeatures.value.push(event.feature);
     emit('drawend', { geoJSON, wkt });
     drawModeEnabled.value = false;
@@ -234,7 +202,7 @@ const clearAll = () => {
     }
     drawnFeatures.value = [];
     selectedFeatures.value = [];
-    escapeOverlay();
+    escapeOverlay(-1);
 };
 
 const clickThroughModeEnabled = ref<Boolean>(false);
@@ -247,18 +215,18 @@ let processedLayers = ref<any[]>([]);
 const wktFormat = new WKT();
 const geoJSONFormat = new GeoJSON();
 
-const processLayers = (newLayers) => {
+const processLayers = (newLayers: any[]) => {
   let newProcessedLayers = [];
   for (const layer of newLayers) {
       // check all features for WKT geometry and translate it to GeoJSON
       const features = layer.features;
       const geoJSONFeatures = [];
       for (const feature of features) {
-          let geoJSONFeature = {};
+          let geoJSONFeature : any = {};
           if (feature.geoJSON) {
-              geoJSONFeature = geoJSONFormat.readFeature(feature.geoJSON, props.projection)
+              geoJSONFeature = geoJSONFormat.readFeature(feature.geoJSON, { dataProjection: props.projection })
           } else if (feature.wkt) {
-              geoJSONFeature = wktFormat.readFeature(feature.wkt, props.projection)
+              geoJSONFeature = wktFormat.readFeature(feature.wkt, { dataProjection: props.projection })
           }
           geoJSONFeature.name = feature.name;
           geoJSONFeature.data = feature.data;
@@ -278,7 +246,7 @@ const processLayers = (newLayers) => {
   processedLayers.value = newProcessedLayers;
 };
 
-const fitToExtent = (extent) => {
+const fitToExtent = (extent: Extent) => {
   if (viewRef.value && extent && extent[0] !== Infinity) {
     viewRef.value.view.fit(extent, {
         maxZoom: 20,
@@ -309,7 +277,7 @@ watch(
         if (props.clearDrawingsOnLayerChange) {
           clearDrawings();
         }
-        escapeOverlay();
+        escapeOverlay(-1);
     },
     {
         immediate: true
@@ -317,13 +285,13 @@ watch(
 );
 
 // this ensures that when the tooltip for an underlying feature is clicked, the feature is brought to the foreground of the map
-function overrideStyleFunction(feature, currentStyle, resolution) {
+function overrideStyleFunction(feature: any, currentStyle: any) {
   if (feature.data?.iri && feature.data?.iri === selectedFeature.value?.data?.iri) {
     return new Style({
       fill: currentStyle.fill_,
       stroke: currentStyle.stroke_,
       image: currentStyle.image_,
-      geometryFunction: currentStyle.geometryFunction_,
+      // geometryFunction: currentStyle.geometryFunction_,
       zIndex: 1
     });
   }
@@ -353,11 +321,10 @@ function overrideStyleFunction(feature, currentStyle, resolution) {
             </Layers.OlTileLayer>
 
             <!-- layers -->
-            <Layers.OlVectorLayer v-for="(layer, index) in processedLayers" :title="layer.title" :visible="true" ref="layersRef">
+            <Layers.OlVectorLayer v-for="layer in processedLayers" :title="layer.title" :visible="true" ref="layersRef">
                 <Sources.OlSourceVector
                     :features="layer.geoJSONFeatures"
                     :strategy="bbox"
-                    format="geoJSON"
                     ref="layerSourcesRef"
                 >
                 </Sources.OlSourceVector>
@@ -427,7 +394,7 @@ function overrideStyleFunction(feature, currentStyle, resolution) {
               :position="getFeatureCenter(clickedFeature)"
               positioning="bottom-center"
               :stopEvent="true">
-              <template v-slot="slotProps">
+              <template v-slot="">
                 <MapTooltip
                   :selectedFeature="clickedFeature"
                   :queryString="props.tooltipIriQueryString"
@@ -437,12 +404,12 @@ function overrideStyleFunction(feature, currentStyle, resolution) {
               </template>
             </Map.OlOverlay>
 
-            <Map.OlOverlay v-else-if="selectedFeature && selectedFeature.name" :position="selectedPosition" positioning="bottom-center" :stopEvent="true">
-              <template v-slot="slotProps">
+            <Map.OlOverlay v-else-if="selectedFeature && selectedFeature.name" :position="selectedPosition || center" positioning="bottom-center" :stopEvent="true">
+              <template v-slot="">
                 <MapTooltip
                   :selectedFeature="selectedFeature"
                   @select="selectFeature"
-                  @deselect="escapeOverlay"
+                  @deselect="escapeOverlay(-1)"
                 />
               </template>
             </Map.OlOverlay>
