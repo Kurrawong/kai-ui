@@ -1,13 +1,14 @@
 <script lang="ts" setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, type HTMLAttributes, onMounted, ref } from "vue";
 import { VisSingleContainer, VisGraph } from "@unovis/vue";
 import { type GraphLinkLabel, type GraphConfigInterface, Graph, GraphNodeSelectionHighlightMode, type GraphNode as Node } from "@unovis/ts";
 import { Eye, EyeClosed } from "lucide-vue-next";
 import init, * as oxigraph from "oxigraph/web";
 import type { GraphNode, GraphLink, GraphData, RDFFormat } from "@/types";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-// elk layout for entity relationship diagram
+// elk layout for entity relationship diagram?
 
 const props = defineProps<{
     /**
@@ -43,7 +44,6 @@ const props = defineProps<{
             literal?: string;
             bnode?: string;
             nodeBorderColor?: string;
-
         };
     };
     /**
@@ -52,6 +52,7 @@ const props = defineProps<{
      * @see https://unovis.dev/docs/networks-and-flows/Graph#component-props
      */
     graphOptions?: GraphConfigInterface<GraphNode, GraphLink>;
+    class?: HTMLAttributes["class"];
 }>();
 
 const DEFAULT_PREFIXES: Record<string, string> = {
@@ -183,21 +184,19 @@ onMounted(() => {
  </script>
 
 <template>
-    <div class="relative">
-        <VisSingleContainer v-if="initialised" :data="data" :height="1000">
-            <VisGraph
-                v-bind="graphOptions"
-                :nodeLabel="showLabels ? nodeLabel : undefined"
-                :linkLabel="showLabels ? linkLabel : undefined"
-                :selectedNodeId="selectedNodeId"
-                :events="events"
-            />
-        </VisSingleContainer>
+    <VisSingleContainer v-if="initialised" :data="data" :class="cn('kai-graph relative', props.class)">
+        <VisGraph
+            v-bind="graphOptions"
+            :nodeLabel="showLabels ? nodeLabel : undefined"
+            :linkLabel="showLabels ? linkLabel : undefined"
+            :selectedNodeId="selectedNodeId"
+            :events="events"
+        />
         <Button variant="ghost" size="icon" @click="showLabels = !showLabels" title="Toggle labels" class="absolute right-4 bottom-4">
             <EyeClosed v-if="showLabels" class="size-4" />
             <Eye v-else class="size-4" />
         </Button>
-    </div>
+    </VisSingleContainer>
 </template>
 
 <style>

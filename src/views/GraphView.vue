@@ -48,5 +48,5 @@ const options: InstanceType<typeof GraphDiagram>["$props"]["options"] = {
 
 <template>
     <h2>Graph visualiser</h2>
-    <GraphDiagram :data="TEST_VOCAB" :options="options" :showLabels="true" />
+    <GraphDiagram :data="TEST_VOCAB" :options="options" :showLabels="true" class="h-[600px]" />
 </template>
