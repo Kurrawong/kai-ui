@@ -99,6 +99,34 @@ hover|Fired when the user hovers over a feature|feature
 drawstart|Fired when the user starts drawing|feature
 drawend|Fired when a feature is fully drawn by the user|feature
 
+### Graph Diagram
+A reactive node-edge graph diagram that renders data from RDF.
+
+![Graph diagram](/docs/GraphDiagram.png)
+
+#### Props
+prop|description|type|required|default
+-|-|-|:-:|-
+data|The RDF data to load & display|`string`|&check;|
+options|Options for customisation|See the [options table](#options) below||
+graphOptions|Additional options from Unovis' graph to pass through|See [the available options from Unovis](https://unovis.dev/docs/networks-and-flows/Graph#component-props)||<pre lang="javascript">{&#13;  nodeSize: 30,&#13;  linkWidth: 2,&#13;  nodeFill: () => ... // colours nodes using style options below,&#13;  linkArrow: true,&#13;  forceLayoutSettings: {&#13;    linkDistance: 80,&#13;    linkStrength: 0.45,&#13;    charge: -1000,&#13;    forceXStrength: 0.15,&#13;    forceYStrength: 0.4,&#13;  },&#13;  nodeSelectionHighlightMode: GraphNodeSelectionHighlightMode.GreyoutNonConnected,&#13;}<pre>
+class|Passthrough for applying CSS classes|`string`||
+
+##### Options
+prop|description|type|required|default
+-|-|-|:-:|-
+format|The format of the RDF data to display|`"application/ld+json" \| "jsonld" \| "text/turtle" \| "ttl" \| "application/trig" \| "trig" \| "application/n-triples" \| "nt" \| "application/n-quads" \| "nq" \| "text/n3" \| "n3" \| "application/rdf+xml" \| "rdf"`||`"text/turtle"`
+prefixes|A map of prefixes to generate curies - e.g. `{"sdo": "https://schema.org/", ...}`|`Record<string, string>`||A small object of default prefixes are supplied to extend upon
+predicates|An array of predicate IRIs to filter by|`string[]`||
+labels|An array of labelling predicates which will label nodes instead of IRIs|`string[]`||
+query|A SPARQL CONSTRUCT query to filter results|`string`||
+style||<pre lang="typescript">{&#13;  node?: string;&#13;  literal?: string;&#13;  bnode?: string;&#13;  nodeBorderColor?: string;&#13;}<pre>||
+
+#### Models
+model|description|type|required|default
+-|-|-|:-:|:-:
+showLabels|Flag whether to display labels for nodes & edges|`boolean`||`false`
+
 ## Development
 To install:
 
